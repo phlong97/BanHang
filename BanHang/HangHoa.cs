@@ -8,7 +8,7 @@ using System.Transactions;
 
 namespace BanHang
 {
-    internal static class DanhmucChung
+    public static class DanhmucChung
     {
         public static List<NhomHang> DSNhomHang = new();
         public static List<HangHoa> DSHangHoa = new();
@@ -22,18 +22,18 @@ namespace BanHang
     /// <summary>
     /// Sử dụng cho điều kiện khách hàng
     /// </summary>
-    internal class TenTruongTruyVan
+    public class TenTruongTruyVan
     {
         public string Id { get; set; } = String.Empty;
         public string Ten { get; set; } = String.Empty;
     }
-    internal class NhanVien
+    public class NhanVien
     {
-        public string Id { get; set; }
-        public string MaNV { get; set; }
-        public string TenNV { get; set; }
+        public string Id { get; set; } = string.Empty;
+        public string MaNV { get; set; } = string.Empty;
+        public string TenNV { get; set; } = string.Empty;
     }
-    internal class NhomHang
+    public class NhomHang
     {
         public string Id { get; set; } = String.Empty;
         public string TenNhom { get; set; } = String.Empty;
@@ -41,13 +41,7 @@ namespace BanHang
 
     }
 
-    internal class LoaiHang
-    {
-        public string Id { get; set; } = String.Empty;
-        public string TenLoai { get; set; } = String.Empty;
-    }
-
-    internal class DinhMuc
+    public class DinhMuc
     {
         public string IdHH { get; set; } = String.Empty;
         public float SoLuong { get; set; }
@@ -56,7 +50,7 @@ namespace BanHang
             return (DinhMuc)this.MemberwiseClone();
         }
     }
-    internal class DVTMoRong
+    public class DVTMoRong
     {
         public string TenDonVi { get; set; } = String.Empty;
         public float GiaTriQuyDoi { get; set; }
@@ -70,7 +64,7 @@ namespace BanHang
         }
     }
 
-    internal class ThuocTinh
+    public class ThuocTinh
     {
         public string Ten { get; set; } = String.Empty;
         public string GiaTri { get; set; } = String.Empty;
@@ -81,7 +75,7 @@ namespace BanHang
         }
     }
 
-    internal class HangHoa
+    public class HangHoa
     {
         public string Id { get; set; } = String.Empty;
         public string MaHH { get; set; } = String.Empty;
@@ -162,7 +156,7 @@ namespace BanHang
         }
     }
 
-    internal class HangHoaCloud
+    public class HangHoaCloud
     {
         public string Id { get; set; } = String.Empty;
         public string MaHH { get; set; } = String.Empty;
@@ -211,7 +205,7 @@ namespace BanHang
         }
     }
 
-    internal class BangGia
+    public class BangGia
     {
         public string Id { get; set; } = String.Empty;
         public string Ten { get; set; } = String.Empty;
@@ -244,7 +238,7 @@ namespace BanHang
             return bg;
         }
     }
-    internal class BangGiaCloud
+    public class BangGiaCloud
     {
         public string Id { get; set; } = String.Empty;
         public string Ten { get; set; } = String.Empty;
@@ -258,7 +252,7 @@ namespace BanHang
         public ObjectExtendProperties<double> nf { get; set; } = new();
         public ObjectExtendProperties<bool> lf { get; set; } = new();
     }
-    internal class HangHoaKhuyenMai
+    public class HangHoaKhuyenMai
     {
         private string _IdHH = String.Empty;
         public string IdHH
@@ -301,7 +295,7 @@ namespace BanHang
         }
 
     }
-    internal class HangHoaKhuyenMaiCloud
+    public class HangHoaKhuyenMaiCloud
     {
         public string IdHH { get; set; } = String.Empty;
         public float GiaVon { get; set; }
@@ -329,7 +323,7 @@ namespace BanHang
             return hh;
         }
     }
-    internal class DieuKienKH
+    public class DieuKienKH
     {
         private string _IdTT = String.Empty;
         public string IdTT
@@ -346,7 +340,7 @@ namespace BanHang
         public string ToanTu { get; set; } = String.Empty;
         public float GiaTri { get; set; }
     }
-    internal class NhomKhach
+    public class NhomKhach
     {
         public string Id { get; set; } = String.Empty;
         public string TenNhom { get; set; } = String.Empty;
@@ -355,7 +349,7 @@ namespace BanHang
         public List<DieuKienKH> DSDieuKien { get; set; } = new();
         public string GhiChu { get; set; } = String.Empty;
     }
-    internal class KhachHang
+    public class KhachHang
     {
         public string Id { get; set; } = String.Empty;
         public string MaKH { get; set; } = String.Empty;
@@ -415,7 +409,7 @@ namespace BanHang
 
     }
 
-    internal class KhachHangCloud
+    public class KhachHangCloud
     {
         public string Id { get; set; } = String.Empty;
         public string MaKH { get; set; } = String.Empty;
@@ -444,7 +438,7 @@ namespace BanHang
         }
     }
 
-    internal class DonHangCT
+    public class DonHangCT
     {
         private string _IdHH;
         public string IdHH
@@ -475,13 +469,13 @@ namespace BanHang
                 LaHangKM = this.LaHangKM
             };
         }
-        internal DonHangCT MakeCopy()
+        public DonHangCT MakeCopy()
         {
             return (DonHangCT)this.MemberwiseClone();
         }
     }
 
-    internal class DonHangCTCloud
+    public class DonHangCTCloud
     {
         public string IdHH { get; set; } = String.Empty;
         public double SoLuong { get; set; }
@@ -498,13 +492,13 @@ namespace BanHang
             };
         }
 
-        internal DonHangCTCloud MakeCopy()
+        public DonHangCTCloud MakeCopy()
         {
             return (DonHangCTCloud)this.MemberwiseClone();
         }
     }
 
-    internal class DonHangBan
+    public class DonHangBan
     {
         public string Id { get; set; } = string.Empty;
         /// <summary>
@@ -609,7 +603,7 @@ namespace BanHang
         }
     }
 
-    internal class DonHangBanCloud
+    public class DonHangBanCloud
     {
         public string Id { get; set; } = string.Empty;
         /// <summary>
@@ -671,7 +665,7 @@ namespace BanHang
         }
     }
 
-    internal class DonHangMua
+    public class DonHangMua
     {
         public string Id { get; set; } = string.Empty;
         /// <summary>
@@ -775,7 +769,7 @@ namespace BanHang
         }
     }
 
-    internal class DonHangMuaCloud
+    public class DonHangMuaCloud
     {
         public string Id { get; set; } = string.Empty;
         /// <summary>
@@ -836,12 +830,12 @@ namespace BanHang
             return dh;
         }
     }
-    internal class TienTrinh
+    public class TienTrinh
     {
         public string IdNV { get; set; } = string.Empty;
         public DateTime ThoiGian { get; set; }
         public int CongViec { get; set; }
-        internal TienTrinh MakeCopy()
+        public TienTrinh MakeCopy()
         {
             return (TienTrinh)this.MemberwiseClone();
         }

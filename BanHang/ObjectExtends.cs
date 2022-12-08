@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace BanHang
 {
-    internal class ObjectExt<T>
+    public class ObjectExt<T>
     {
         public string key { get; set; }
         public T value { get; set; }
@@ -15,7 +15,7 @@ namespace BanHang
             return (ObjectExt<T>)this.MemberwiseClone();
         }
     }
-    internal class ObjectExtendProperties<T>
+    public class ObjectExtendProperties<T>
     {
 
         public List<ObjectExt<T>> objectExts { get; set; } = new List<ObjectExt<T>>();

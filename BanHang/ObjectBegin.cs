@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace BanHang
 {
-    internal class ObjBeginValue
+    public class ObjBeginValue
     {
         public int year { get; set; }
         public string key { get; set; } = String.Empty;
@@ -17,7 +17,7 @@ namespace BanHang
             return (ObjBeginValue)this.MemberwiseClone();
         }
     }
-    internal class ObjectBeginValue
+    public class ObjectBeginValue
     {
 
         public List<ObjBeginValue> Ds { get; set; } = new List<ObjBeginValue>();
