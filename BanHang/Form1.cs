@@ -49,7 +49,11 @@ namespace BanHang
 
             MessageBox.Show("Load danh mục thành công!");
 
-            dgDanhMuc.DataSource = DanhmucChung.DSKhachHang;
+            dgLK.DataSource = DanhmucChung.DSNhomKhach;
+            dgKH.DataSource = DanhmucChung.DSKhachHang;
+            dgNV.DataSource = DanhmucChung.DSNhanVien;
+            dgNH.DataSource = DanhmucChung.DSNhomHang;
+            dgHangHoa.DataSource = DanhmucChung.DSHangHoa;
         }
     }
 

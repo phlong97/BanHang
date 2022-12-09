@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Transactions;
@@ -18,6 +19,43 @@ namespace BanHang
         public static List<NhanVien> DSNhanVien = new();
         public static List<string> ListToanTu = new() { "<", "<=", "=", ">", ">=" };
         public static List<TenTruongTruyVan> ListTenTruong = new();
+        public static List<CTCongNo> CTCongNo = new();
+        public static List<TongHopCongNo> THCNNguoiMua(DateTime TuNgay, DateTime DenNgay)
+        {
+            List<TongHopCongNo> ttcnnm = new();
+            foreach (var kh in DSKhachHang.Where(x => x.LoaiKhach == 0))
+            {
+                var DKCo = CTCongNo.Where(x => x.IdKH.Equals(kh.Id) && x.Ngay < TuNgay).Sum(x => x.PSCo);
+                var lstCongNo = CTCongNo.Where(x => x.IdKH.Equals(kh.Id)).Select(x =>
+                    new TongHopCongNo
+                    {
+                        MaKH = kh.MaKH,
+                        TenKH = kh.TenKhach,
+
+                    });
+
+                //ttcnnm.Add(new TongHopCongNo
+                //{
+                //    MaKH = kh.MaKH,
+                //    TenKH = kh.TenKhach,
+                //    DKNo = 
+                //});
+            }
+            return ttcnnm;
+        }
+    }
+    public class TongHopCongNo
+    {
+        public string MaKH { get; set; }
+        public string TenKH { get; set; }
+        public double DKNo { get; set; }
+        public double DKCo { get; set; }
+        public double PSNo { get; set; }
+        public double PSCo { get; set; }
+        public double CK => DKNo - DKCo + PSNo - PSCo;
+        public double CKNo => Math.Max(CK, 0);
+        public double CKCo => Math.Max(-CK, 0);
+
     }
     /// <summary>
     /// Sử dụng cho điều kiện khách hàng
@@ -368,6 +406,10 @@ namespace BanHang
         }
         public string TenNhomKhach { get; set; } = String.Empty;
         public bool LaCaNhan { get => lf.GetValue(TuDien.KH_LaCaNhan); set => lf.SetValue(TuDien.KH_LaCaNhan, value); }
+        /// <summary>
+        /// 0: Ngưới mua 1: Người bán 2: Mua và bán
+        /// </summary>
+        public int LoaiKhach { get; set; }
         public DateTime NgaySinh { get => df.GetValue(TuDien.NgaySinh); set => df.SetValue(TuDien.NgaySinh, value); }
         public string EMail { get => tf.GetValue(TuDien.EMail); set => tf.SetValue(TuDien.EMail, value); }
         public string DiaChi { get => tf.GetValue(TuDien.DiaChi); set => tf.SetValue(TuDien.DiaChi, value); }
@@ -507,6 +549,7 @@ namespace BanHang
         /// 2: Đã giao hàng
         /// </summary>
         public int TrangThai { get; set; }
+        public string LoaiCT { get; set; }
         public DateTime Ngay { get; set; }
         public string SoPhieu { get; set; } = string.Empty;
         private string _IdKhach = string.Empty;
@@ -541,6 +584,7 @@ namespace BanHang
                 TenNV = nv == null ? string.Empty : nv.TenNV;
             }
         }
+
         public string TenNV { get; set; } = string.Empty;
         private string _IdBangGia = string.Empty;
         public string IdBangGia
@@ -674,6 +718,7 @@ namespace BanHang
         /// 2: Đã giao hàng
         /// </summary>
         public int TrangThai { get; set; }
+        public string LoaiCT { get; set; }
         public DateTime Ngay { get; set; }
         public string SoPhieu { get; set; } = string.Empty;
         private string _IdKhach = string.Empty;
@@ -832,8 +877,10 @@ namespace BanHang
     }
     public class TienTrinh
     {
-        public string IdNV { get; set; } = string.Empty;
+        public string IdUser { get; set; } = string.Empty;
         public DateTime ThoiGian { get; set; }
+        public string NoiDung { get; set; } = string.Empty;
+
         public int CongViec { get; set; }
         public TienTrinh MakeCopy()
         {
@@ -841,4 +888,43 @@ namespace BanHang
         }
     }
 
+    public class CTCongNo
+    {
+        public string SoCT { get; set; }
+        public string LoaiCT { get; set; }
+        public DateTime Ngay { get; set; }
+        public string NoiDung { get; set; }
+        public string IdKH { get; set; }
+        /// <summary>
+        /// Nợ: Mua hàng của người bán, nhận tiền của người mua, nhận hàng trả lại,...
+        /// </summary>
+        public double PSNo { get; set; }
+        /// <summary>
+        /// Có: Trả cho người bán, Trả hàng cho người bán, xuất bán,...
+        /// </summary>
+        public double PSCo { get; set; }
+    }
+    public class CTNhapXuat
+    {
+        public string SoCT { get; set; }
+        public string LoaiCT { get; set; }
+        public DateTime Ngay { get; set; }
+        public string NoiDung { get; set; }
+        public string IdHH { get; set; }
+        public string IdKhoNhap { get; set; }
+        public double SLNhap { get; set; }
+        public double DGNhap { get; set; }
+
+        public string IdKhoXuat { get; set; }
+        public double SLXuat { get; set; }
+        public double GTXuat { get; set; }
+    }
+
+    //DonHangBan:
+    /* BC kinh doanh
+     * BC Kho: -> DonHangMua, DonHangBan -> Collection TongHopNhapXuat
+     * BC Công nợ
+     * 
+     * 
+     */
 }
