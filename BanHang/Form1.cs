@@ -20,30 +20,30 @@ namespace BanHang
 
         private void btnTaoDM_Click(object sender, EventArgs e)
         {
-            Generator.TaoDanhMucXML();
+            Generator.TaoDanhMucJSon();
             MessageBox.Show("Tạo danh mục thành công!");
         }
 
         private void btnLoadDM_Click(object sender, EventArgs e)
         {
             //Danh mục nhóm hàng
-            var DsNH = Generator.ReadFromXmlFile<List<NhomHang>>("DanhMuc/nhomhang.txt");
+            var DsNH = Generator.ReadFromJsonFile<List<NhomHang>>("DanhMuc/nhomhang.txt");
             DanhmucChung.DSNhomHang.Clear();
             DanhmucChung.DSNhomHang.AddRange(DsNH);
             //Danh mục hàng hóa
-            var DsHH = Generator.ReadFromXmlFile<List<HangHoaCloud>>("DanhMuc/hanghoa.txt");
+            var DsHH = Generator.ReadFromJsonFile<List<HangHoaCloud>>("DanhMuc/hanghoa.txt");
             DanhmucChung.DSHangHoa.Clear();
             DanhmucChung.DSHangHoa.AddRange(DsHH.Select(x => x.ToHangHoa()).ToList());
             //Danh mục nhóm khách
-            var DsNK = Generator.ReadFromXmlFile<List<NhomKhach>>("DanhMuc/nhomkhach.txt");
+            var DsNK = Generator.ReadFromJsonFile<List<NhomKhach>>("DanhMuc/nhomkhach.txt");
             DanhmucChung.DSNhomKhach.Clear();
             DanhmucChung.DSNhomKhach.AddRange(DsNK);
             //Danh mục nhân viên
-            var DsNV = Generator.ReadFromXmlFile<List<NhanVien>>("DanhMuc/nhanvien.txt");
+            var DsNV = Generator.ReadFromJsonFile<List<NhanVien>>("DanhMuc/nhanvien.txt");
             DanhmucChung.DSNhanVien.Clear();
             DanhmucChung.DSNhanVien.AddRange(DsNV);
             //Danh mục khách hàng
-            var DSKH = Generator.ReadFromXmlFile<List<KhachHangCloud>>("DanhMuc/khachhang.txt");
+            var DSKH = Generator.ReadFromJsonFile<List<KhachHangCloud>>("DanhMuc/khachhang.txt");
             DanhmucChung.DSKhachHang.Clear();
             DanhmucChung.DSKhachHang.AddRange(DSKH.Select(x => x.ToKhachHang()).ToList());
 
