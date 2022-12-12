@@ -20,29 +20,82 @@ namespace BanHang
         public static List<string> ListToanTu = new() { "<", "<=", "=", ">", ">=" };
         public static List<TenTruongTruyVan> ListTenTruong = new();
         public static List<CTCongNo> CTCongNo = new();
+        public static List<OTheKho> CTTheKho = new();
         public static List<TongHopCongNo> THCNNguoiMua(DateTime TuNgay, DateTime DenNgay)
         {
             List<TongHopCongNo> ttcnnm = new();
-            foreach (var kh in DSKhachHang.Where(x => x.LoaiKhach == 0))
+            Parallel.ForEach(DSKhachHang.Where(x => x.LoaiKhach == 0).OrderBy(x => x.TenKhach), kh =>
             {
-                var DKCo = CTCongNo.Where(x => x.IdKH.Equals(kh.Id) && x.Ngay < TuNgay).Sum(x => x.PSCo);
-                var lstCongNo = CTCongNo.Where(x => x.IdKH.Equals(kh.Id)).Select(x =>
-                    new TongHopCongNo
-                    {
-                        MaKH = kh.MaKH,
-                        TenKH = kh.TenKhach,
-
-                    });
-
-                //ttcnnm.Add(new TongHopCongNo
-                //{
-                //    MaKH = kh.MaKH,
-                //    TenKH = kh.TenKhach,
-                //    DKNo = 
-                //});
-            }
+                var ct = CTCongNo.Where(x => x.IdKH.Equals(kh.Id) && x.Ngay < DenNgay);
+                var cndk = kh.CongNoDauNam() + ct.Where(x => x.Ngay < TuNgay).Sum(x => x.PSNo - x.PSCo);
+                ttcnnm.Add(new TongHopCongNo
+                {
+                    MaKH = kh.MaKH,
+                    TenKH = kh.TenKhach,
+                    DKNo = Math.Max(cndk, 0),
+                    DKCo = Math.Max(-cndk, 0),
+                    PSNo = ct.Where(x => x.Ngay >= TuNgay).Sum(x => x.PSNo),
+                    PSCo = ct.Where(x => x.Ngay >= TuNgay).Sum(x => x.PSCo)
+                });
+            });
             return ttcnnm;
         }
+        public static List<TongHopTonKho> THTonKho(DateTime TuNgay, DateTime DenNgay, string IdKho = null)
+        {
+            List<TongHopTonKho> thtk = new();
+
+            Parallel.ForEach(DSHangHoa, hh =>
+            {
+                var tknhap = CTTheKho.Where(x => x.IdHH.Equals(hh.Id) && x.Ngay < DenNgay).GroupBy(x => x.IdKhoNhap).Select(grs => new TongHopTonKho
+                {
+                    IdHH = hh.Id,
+                    MaHH = hh.MaHH,
+                    TenHH = hh.TenHH,
+                    DVT = hh.Dvt,
+                    SLDK = hh.SoLuongTonKhoDauNam(IdKho) + grs.Where(x => x.Ngay < TuNgay).Sum(x => x.SLNhap - x.SLXuat),
+                    GTDK = hh.GiaTriTonKhoDauNam(IdKho) + grs.Where(x => x.Ngay < TuNgay).Sum(x => x.GTNhap - x.GTNhap),
+                    SLNhap = grs.Where(x => x.Ngay >= TuNgay).Sum(x => x.SLNhap),
+                    GTNhap = grs.Where(x => x.Ngay >= TuNgay).Sum(x => x.GTNhap),
+                    SLXuat = grs.Where(x => x.Ngay >= TuNgay).Sum(x => x.SLXuat),
+                    GTXuat = grs.Where(x => x.Ngay >= TuNgay).Sum(x => x.GTXuat),
+                    IdKho = grs.First().IdKhoNhap
+                }).ToList();
+                lock (thtk) thtk.AddRange(tknhap);
+                var tkxuat = CTTheKho.Where(x => x.IdHH.Equals(hh.Id) && x.Ngay < DenNgay).GroupBy(x => x.IdKhoXuat).Select(grs => new TongHopTonKho
+                {
+                    IdHH = hh.Id,
+                    MaHH = hh.MaHH,
+                    TenHH = hh.TenHH,
+                    DVT = hh.Dvt,
+                    SLDK = hh.SoLuongTonKhoDauNam(IdKho) + grs.Where(x => x.Ngay < TuNgay).Sum(x => x.SLNhap - x.SLXuat),
+                    GTDK = hh.GiaTriTonKhoDauNam(IdKho) + grs.Where(x => x.Ngay < TuNgay).Sum(x => x.GTNhap - x.GTNhap),
+                    SLNhap = grs.Where(x => x.Ngay >= TuNgay).Sum(x => x.SLNhap),
+                    GTNhap = grs.Where(x => x.Ngay >= TuNgay).Sum(x => x.GTNhap),
+                    SLXuat = grs.Where(x => x.Ngay >= TuNgay).Sum(x => x.SLXuat),
+                    GTXuat = grs.Where(x => x.Ngay >= TuNgay).Sum(x => x.GTXuat),
+                    IdKho = grs.First().IdKhoXuat
+                }).ToList();
+                lock (thtk) thtk.AddRange(tkxuat);
+            });
+
+            return thtk;
+        }
+    }
+    public class CTCongNo
+    {
+        public string SoCT { get; set; }
+        public string LoaiCT { get; set; }
+        public DateTime Ngay { get; set; }
+        public string NoiDung { get; set; }
+        public string IdKH { get; set; }
+        /// <summary>
+        /// Nợ: Mua hàng của người bán, nhận tiền của người mua, nhận hàng trả lại,...
+        /// </summary>
+        public double PSNo { get; set; }
+        /// <summary>
+        /// Có: Trả cho người bán, Trả hàng cho người bán, xuất bán,...
+        /// </summary>
+        public double PSCo { get; set; }
     }
     public class TongHopCongNo
     {
@@ -56,6 +109,104 @@ namespace BanHang
         public double CKNo => Math.Max(CK, 0);
         public double CKCo => Math.Max(-CK, 0);
 
+    }
+    public class TheKho
+    {
+        public string SoCT { get; set; }
+        public string LoaiCT { get; set; }
+        public DateTime Ngay { get; set; }
+        private string _IdHH;
+        public string IdHH
+        {
+            get => _IdHH;
+            set
+            {
+                _IdHH = value;
+                var hh = DanhmucChung.DSHangHoa.FirstOrDefault(x => x.Id.Equals(_IdHH));
+                MaHH = hh == null ? string.Empty : hh.MaHH;
+                TenHH = hh == null ? string.Empty : hh.TenHH;
+            }
+        }
+        public string MaHH { get; set; }
+        public string TenHH { get; set; }
+        public double SoLuong { get; set; }
+        public double DonGia { get; set; }
+        public double DonGiaVon { get; set; }
+        public double ThanhTien => SoLuong * DonGia;
+        public string IdKho { get; set; }
+    }
+    public class OTheKho
+    {
+        public string SoCT { get; set; }
+        public string LoaiCT { get; set; }
+        public DateTime Ngay { get; set; }
+        private string _IdHH;
+        public string IdHH
+        {
+            get => _IdHH;
+            set
+            {
+                _IdHH = value;
+                var hh = DanhmucChung.DSHangHoa.FirstOrDefault(x => x.Id.Equals(_IdHH));
+                MaHH = hh == null ? string.Empty : hh.MaHH;
+                TenHH = hh == null ? string.Empty : hh.TenHH;
+            }
+        }
+        public string MaHH { get; set; }
+        public string TenHH { get; set; }
+        public double SoLuong { get; set; }
+        public double DonGia { get; set; }
+        public double DonGiaVon { get; set; }
+        public double ThanhTien => SoLuong * DonGia;
+        public string IdKhoNhap { get; set; }
+        public double SLNhap { get; set; }
+        public double GTNhap => SLNhap * DonGiaVon;
+        public string IdKhoXuat { get; set; }
+        public double SLXuat { get; set; }
+        public double GTXuat => SLXuat * DonGiaVon;
+
+
+    }
+    public class OTheKhoCloud
+    {
+        public string SoCT { get; set; }
+        public string LoaiCT { get; set; }
+        public DateTime Ngay { get; set; }
+        public string IdHH { get; set; }
+
+        public double SoLuong { get; set; }
+        public double DonGia { get; set; }
+        public double DonGiaVon { get; set; }
+        public string IdKhoNhap { get; set; }
+        public double SLNhap { get; set; }
+        public string IdKhoXuat { get; set; }
+        public double SLXuat { get; set; }
+
+    }
+    /// <summary>
+    /// Đơn giá vốn
+    /// TH1: Giá bình quân gia quyền - Tính theo tháng
+    ///  = (Giá trị tồn đầu + giá trị nhập)/(SL tồn dầu + SL nhập)
+    /// TH2: Giá theo lô
+    ///  Phái có mã lô hàng khi nhập và xuất
+    ///  Giá vốn = đơn giá của lô đó
+    /// TH3: Giá bình quân liên tiếp - Mõi lần nhập giá vốn thay đổi
+    /// </summary>
+    public class TongHopTonKho
+    {
+        public string IdHH { get; set; }
+        public string MaHH { get; set; }
+        public string TenHH { get; set; }
+        public string DVT { get; set; }
+        public string IdKho { get; set; }
+        public double SLDK { get; set; }
+        public double GTDK { get; set; }
+        public double SLNhap { get; set; }
+        public double GTNhap { get; set; }
+        public double SLXuat { get; set; }
+        public double GTXuat { get; set; }
+        public double SLCK => SLDK + SLNhap - SLXuat;
+        public double GTCK => GTDK + GTNhap - GTXuat;
     }
     /// <summary>
     /// Sử dụng cho điều kiện khách hàng
@@ -73,15 +224,15 @@ namespace BanHang
     }
     public class NhomHang
     {
-        public string Id { get; set; } = String.Empty;
-        public string TenNhom { get; set; } = String.Empty;
-        public string IdNhomCha { get; set; } = String.Empty;
+        public string Id { get; set; } = string.Empty;
+        public string TenNhom { get; set; } = string.Empty;
+        public string IdNhomCha { get; set; } = string.Empty;
 
     }
 
     public class DinhMuc
     {
-        public string IdHH { get; set; } = String.Empty;
+        public string IdHH { get; set; } = string.Empty;
         public float SoLuong { get; set; }
         public DinhMuc MakeCopy()
         {
@@ -113,11 +264,13 @@ namespace BanHang
         }
     }
 
+
+
     public class HangHoa
     {
         public string Id { get; set; } = String.Empty;
         public string MaHH { get; set; } = String.Empty;
-        public string MaLoai { get; set; } = String.Empty;
+
         public string TenHH { get; set; } = String.Empty;
         public string Dvt { get; set; } = String.Empty;
 
@@ -128,11 +281,11 @@ namespace BanHang
             set
             {
                 _IdNhom = value;
-                var nh = DanhmucChung.DSNhomHang.FirstOrDefault(x => x.Equals(_IdNhom));
+                var nh = DanhmucChung.DSNhomHang.FirstOrDefault(x => x.Id.Equals(_IdNhom));
                 TenNhom = nh == null ? string.Empty : nh.TenNhom;
             }
         }
-
+        public string MaLoai { get; set; } = String.Empty;
         public string TenNhom { get; set; } = String.Empty;
         public double GiaBan { get; set; }
         public List<DVTMoRong> DVTMoRong { get; set; } = new();
@@ -888,22 +1041,7 @@ namespace BanHang
         }
     }
 
-    public class CTCongNo
-    {
-        public string SoCT { get; set; }
-        public string LoaiCT { get; set; }
-        public DateTime Ngay { get; set; }
-        public string NoiDung { get; set; }
-        public string IdKH { get; set; }
-        /// <summary>
-        /// Nợ: Mua hàng của người bán, nhận tiền của người mua, nhận hàng trả lại,...
-        /// </summary>
-        public double PSNo { get; set; }
-        /// <summary>
-        /// Có: Trả cho người bán, Trả hàng cho người bán, xuất bán,...
-        /// </summary>
-        public double PSCo { get; set; }
-    }
+
     public class CTNhapXuat
     {
         public string SoCT { get; set; }

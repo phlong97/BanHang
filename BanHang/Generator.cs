@@ -24,9 +24,9 @@ namespace BanHang
             return new string(Enumerable.Repeat(chars, length)
                 .Select(s => s[random.Next(s.Length)]).ToArray());
         }
-        public static DateTime RandomDay()
+        public static DateTime RandomDay(int YearStart)
         {
-            DateTime start = new DateTime(1995, 1, 1);
+            DateTime start = new DateTime(YearStart, 1, 1);
             int range = (DateTime.Today - start).Days;
             return start.AddDays(random.Next(range));
         }
@@ -85,7 +85,7 @@ namespace BanHang
                     DiaChi = RandomString(15),
                     DienThoai = RandomNumberString(10),
                     EMail = $"{RandomString(10)}@gmail.com",
-                    NgaySinh = RandomDay(),
+                    NgaySinh = RandomDay(1945),
                     LaCaNhan = true,
                     IdNhomKhach = $"ID_NK{random.Next(1, 6).ToString("D1")}",
                 });
@@ -167,11 +167,11 @@ namespace BanHang
                 {
                     Id = $"ID_KH{i.ToString("D5")}",
                     MaKH = $"MA_KH{i.ToString("D5")}",
-                    TenKhach = DsHo[random.Next(DsHo.Count())] + " " + DsTen[random.Next(DsTen.Count())],
+                    TenKhach = DsHo[random.Next(DsHo.Count() - 1)] + " " + DsTen[random.Next(DsTen.Count() - 1)],
                     DiaChi = RandomString(15),
                     DienThoai = RandomNumberString(10),
                     EMail = $"{RandomString(10)}@gmail.com",
-                    NgaySinh = RandomDay(),
+                    NgaySinh = RandomDay(1945),
                     LaCaNhan = true,
                     IdNhomKhach = $"ID_NK{random.Next(1, 6).ToString("D1")}",
                 });
@@ -187,6 +187,7 @@ namespace BanHang
                     Id = $"ID_HH{(i + 1).ToString("D5")}",
                     MaHH = $"MaHH_HH{(i + 1).ToString("D5")}",
                     TenHH = $"Hàng hóa {i + 1}",
+                    MaLoai = $"MA_LOAI{i.ToString("D5")}",
                     IdNhom = $"ID_NH{random.Next(0, 50).ToString("D4")}",
                     Dvt = Dvt.Split(",")[random.Next(0, 10)],
                     GiaVon = random.Next(1000, 500000),
@@ -201,6 +202,45 @@ namespace BanHang
             }
             WriteToJsonFile<List<HangHoaCloud>>("DanhMuc/hanghoa.txt", DsHangHoa.Select(x => x.ToHangHoaCloud()).ToList());
 
+            //Tạo Chi tiết cõng nợ
+            List<CTCongNo> DSCTCongNo = new();
+            for (int i = 0; i < 1000; i++)
+            {
+                var ct = new CTCongNo()
+                {
+                    SoCT = $"CT_{random.Next(501).ToString("D5")}",
+                    LoaiCT = "X1",
+                    IdKH = $"ID_KH{random.Next(501).ToString("D5")}",
+                    Ngay = RandomDay(2020),
+                    NoiDung = "",
+                    PSNo = random.Next(10000001),
+                    PSCo = random.Next(10000001),
+                };
+                DSCTCongNo.Add(ct);
+            }
+            WriteToJsonFile<List<CTCongNo>>("DanhMuc/CTCongNo.txt", DSCTCongNo);
+
+            //Tạo Thẻ kho
+            List<OTheKhoCloud> DSTheKho = new();
+            for (int i = 0; i < 5000; i++)
+            {
+                var ct = new OTheKhoCloud()
+                {
+                    SoCT = $"CT_{random.Next(501).ToString("D5")}",
+                    LoaiCT = "X1",
+                    IdHH = $"ID_HH{random.Next(5001).ToString("D5")}",
+                    Ngay = RandomDay(2020),
+                    IdKhoNhap = $"ID_KHO{random.Next(51).ToString("D4")}",
+                    IdKhoXuat = $"ID_KHO{random.Next(51).ToString("D4")}",
+                    SLNhap = random.Next(11),
+                    SLXuat = random.Next(11),
+                    DonGia = random.Next(50000),
+                    DonGiaVon = random.Next(50000),
+                    SoLuong = random.Next(101)
+                };
+                DSTheKho.Add(ct);
+            }
+            WriteToJsonFile<List<OTheKhoCloud>>("DanhMuc/thekho.txt", DSTheKho);
         }
 
         internal static void WriteToJsonFile<T>(string filePath, T objectToWrite, bool append = false) where T : new()

@@ -46,14 +46,31 @@ namespace BanHang
             var DSKH = Generator.ReadFromJsonFile<List<KhachHangCloud>>("DanhMuc/khachhang.txt");
             DanhmucChung.DSKhachHang.Clear();
             DanhmucChung.DSKhachHang.AddRange(DSKH.Select(x => x.ToKhachHang()).ToList());
+            //CTCongNo
+            var CTCN = Generator.ReadFromJsonFile<List<CTCongNo>>("DanhMuc/CTCongNo.txt");
+            DanhmucChung.CTCongNo.Clear();
+            DanhmucChung.CTCongNo.AddRange(CTCN);
+            //TheKho
+            var TheKho = Generator.ReadFromJsonFile<List<OTheKho>>("DanhMuc/thekho.txt");
+            DanhmucChung.CTTheKho.Clear();
+            DanhmucChung.CTTheKho.AddRange(TheKho);
 
-            MessageBox.Show("Load danh mục thành công!");
-
-            dgLK.DataSource = DanhmucChung.DSNhomKhach;
+            dgTheKho.DataSource = DanhmucChung.CTTheKho;
             dgKH.DataSource = DanhmucChung.DSKhachHang;
             dgNV.DataSource = DanhmucChung.DSNhanVien;
-            dgNH.DataSource = DanhmucChung.DSNhomHang;
             dgHangHoa.DataSource = DanhmucChung.DSHangHoa;
+            dgCTCNo.DataSource = DanhmucChung.CTCongNo;
+
+        }
+
+        private void btnTHCN_Click(object sender, EventArgs e)
+        {
+            dgTongHopCN.DataSource = DanhmucChung.THCNNguoiMua(new DateTime(2021, 1, 1), new DateTime(2021, 12, 31));
+        }
+
+        private void btnTHTK_Click(object sender, EventArgs e)
+        {
+            dgTonKho.DataSource = DanhmucChung.THTonKho(new DateTime(2021, 1, 1), new DateTime(2021, 12, 31));
         }
     }
 
