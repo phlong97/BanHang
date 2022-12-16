@@ -51,7 +51,7 @@ namespace BanHang
             DanhmucChung.CTCongNo.Clear();
             DanhmucChung.CTCongNo.AddRange(CTCN);
             //TheKho
-            var TheKho = Generator.ReadFromJsonFile<List<OTheKho>>("DanhMuc/thekho.txt");
+            var TheKho = Generator.ReadFromJsonFile<List<TheKho>>("DanhMuc/thekho.txt");
             DanhmucChung.CTTheKho.Clear();
             DanhmucChung.CTTheKho.AddRange(TheKho);
 

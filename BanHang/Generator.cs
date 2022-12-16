@@ -221,10 +221,10 @@ namespace BanHang
             WriteToJsonFile<List<CTCongNo>>("DanhMuc/CTCongNo.txt", DSCTCongNo);
 
             //Tạo Thẻ kho
-            List<OTheKhoCloud> DSTheKho = new();
+            List<TheKhoCloud> DSTheKho = new();
             for (int i = 0; i < 5000; i++)
             {
-                var ct = new OTheKhoCloud()
+                var ct = new TheKhoCloud()
                 {
                     SoCT = $"CT_{random.Next(501).ToString("D5")}",
                     LoaiCT = "X1",
@@ -240,7 +240,7 @@ namespace BanHang
                 };
                 DSTheKho.Add(ct);
             }
-            WriteToJsonFile<List<OTheKhoCloud>>("DanhMuc/thekho.txt", DSTheKho);
+            WriteToJsonFile<List<TheKhoCloud>>("DanhMuc/thekho.txt", DSTheKho);
         }
 
         internal static void WriteToJsonFile<T>(string filePath, T objectToWrite, bool append = false) where T : new()
