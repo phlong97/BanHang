@@ -6,36 +6,62 @@ using System.Threading.Tasks;
 
 namespace BanHang
 {
-    public class ObjectExt<T>
+    public class ObjectExtends
     {
-        public string key { get; set; }
-        public T value { get; set; }
-        public ObjectExt<T> MakeCopy()
-        {
-            return (ObjectExt<T>)this.MemberwiseClone();
-        }
-    }
-    public class ObjectExtendProperties<T>
-    {
+        public Dictionary<string, string> tf { get; set; } = new();
+        public Dictionary<string, DateTime> df { get; set; } = new();
+        public Dictionary<string, double> nf { get; set; } = new();
+        public Dictionary<string, bool> lf { get; set; } = new();
 
-        public List<ObjectExt<T>> objectExts { get; set; } = new List<ObjectExt<T>>();
-        public T GetValue(string key)
+        public string GetTextField(string key)
         {
-            var obj = objectExts.FirstOrDefault(x => x.key.Equals(key));
-            if (obj == null) return default(T);
-            else return obj.value;
+            return tf.ContainsKey(key) ? tf[key] : string.Empty;
         }
-        public void SetValue(string key, T value)
+
+        public void SetTextField(string key, string value)
         {
-            var obj = objectExts.FirstOrDefault(x => x.key.Equals(key));
-            if (obj == null) objectExts.Add(new ObjectExt<T> { key = key, value = value });
-            else obj.value = value;
+            if (tf.ContainsKey(key)) tf[key] = value;
+            else tf.Add(key, value);
         }
-        public ObjectExtendProperties<T> MakeCopy()
+
+        public DateTime GetDateField(string key)
         {
-            var copy = (ObjectExtendProperties<T>)this.MemberwiseClone();
-            copy.objectExts = this.objectExts.Select(x => x.MakeCopy()).ToList();
-            return copy;
+            return df.ContainsKey(key) ? df[key] : DateTime.MinValue;
+        }
+
+        public void SetDateField(string key, DateTime value)
+        {
+            if (df.ContainsKey(key)) df[key] = value;
+            else df.Add(key, value);
+        }
+
+        public double GetNumberField(string key)
+        {
+            return nf.ContainsKey(key) ? nf[key] : 0;
+        }
+
+        public void SetNumberField(string key, double value)
+        {
+            if (nf.ContainsKey(key)) nf[key] = value;
+            else nf.Add(key, value);
+        }
+        public bool GetLogicField(string key)
+        {
+            return lf.ContainsKey(key) ? lf[key] : false;
+        }
+
+        public void SetLogicField(string key, bool value)
+        {
+            if (lf.ContainsKey(key)) lf[key] = value;
+            else lf.Add(key, value);
+        }
+
+        public void CopySource(ObjectExtends source)
+        {
+            tf = new Dictionary<string, string>(source.tf);
+            nf = new Dictionary<string, double>(source.nf);
+            df = new Dictionary<string, DateTime>(source.df);
+            lf = new Dictionary<string, bool>(source.lf);
         }
     }
 }

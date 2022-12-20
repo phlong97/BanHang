@@ -28,49 +28,49 @@ namespace BanHang
         {
             //Danh mục nhóm hàng
             var DsNH = Generator.ReadFromJsonFile<List<NhomHang>>("DanhMuc/nhomhang.txt");
-            DanhmucChung.DSNhomHang.Clear();
-            DanhmucChung.DSNhomHang.AddRange(DsNH);
+            DuLieuBanHang.DSNhomHang.Clear();
+            DuLieuBanHang.DSNhomHang.AddRange(DsNH);
             //Danh mục hàng hóa
             var DsHH = Generator.ReadFromJsonFile<List<HangHoaCloud>>("DanhMuc/hanghoa.txt");
-            DanhmucChung.DSHangHoa.Clear();
-            DanhmucChung.DSHangHoa.AddRange(DsHH.Select(x => x.ToHangHoa()).ToList());
+            DuLieuBanHang.DSHangHoa.Clear();
+            DuLieuBanHang.DSHangHoa.AddRange(DsHH.Select(x => x.ToHangHoa()).ToList());
             //Danh mục nhóm khách
             var DsNK = Generator.ReadFromJsonFile<List<NhomKhach>>("DanhMuc/nhomkhach.txt");
-            DanhmucChung.DSNhomKhach.Clear();
-            DanhmucChung.DSNhomKhach.AddRange(DsNK);
+            DuLieuBanHang.DSNhomKhach.Clear();
+            DuLieuBanHang.DSNhomKhach.AddRange(DsNK);
             //Danh mục nhân viên
             var DsNV = Generator.ReadFromJsonFile<List<NhanVien>>("DanhMuc/nhanvien.txt");
-            DanhmucChung.DSNhanVien.Clear();
-            DanhmucChung.DSNhanVien.AddRange(DsNV);
+            DuLieuBanHang.DSNhanVien.Clear();
+            DuLieuBanHang.DSNhanVien.AddRange(DsNV);
             //Danh mục khách hàng
             var DSKH = Generator.ReadFromJsonFile<List<KhachHangCloud>>("DanhMuc/khachhang.txt");
-            DanhmucChung.DSKhachHang.Clear();
-            DanhmucChung.DSKhachHang.AddRange(DSKH.Select(x => x.ToKhachHang()).ToList());
+            DuLieuBanHang.DSKhachHang.Clear();
+            DuLieuBanHang.DSKhachHang.AddRange(DSKH.Select(x => x.ToKhachHang()).ToList());
             //CTCongNo
             var CTCN = Generator.ReadFromJsonFile<List<CTCongNo>>("DanhMuc/CTCongNo.txt");
-            DanhmucChung.CTCongNo.Clear();
-            DanhmucChung.CTCongNo.AddRange(CTCN);
+            DuLieuBanHang.CTCongNo.Clear();
+            DuLieuBanHang.CTCongNo.AddRange(CTCN);
             //TheKho
             var TheKho = Generator.ReadFromJsonFile<List<TheKho>>("DanhMuc/thekho.txt");
-            DanhmucChung.CTTheKho.Clear();
-            DanhmucChung.CTTheKho.AddRange(TheKho);
+            DuLieuBanHang.CTTheKho.Clear();
+            DuLieuBanHang.CTTheKho.AddRange(TheKho);
 
-            dgTheKho.DataSource = DanhmucChung.CTTheKho;
-            dgKH.DataSource = DanhmucChung.DSKhachHang;
-            dgNV.DataSource = DanhmucChung.DSNhanVien;
-            dgHangHoa.DataSource = DanhmucChung.DSHangHoa;
-            dgCTCNo.DataSource = DanhmucChung.CTCongNo;
+            dgTheKho.DataSource = DuLieuBanHang.CTTheKho;
+            dgKH.DataSource = DuLieuBanHang.DSKhachHang;
+            dgNV.DataSource = DuLieuBanHang.DSNhanVien;
+            dgHangHoa.DataSource = DuLieuBanHang.DSHangHoa;
+            dgCTCNo.DataSource = DuLieuBanHang.CTCongNo;
 
         }
 
         private void btnTHCN_Click(object sender, EventArgs e)
         {
-            dgTongHopCN.DataSource = DanhmucChung.THCNNguoiMua(new DateTime(2021, 1, 1), new DateTime(2021, 12, 31));
+            dgTongHopCN.DataSource = DuLieuBanHang.THCNNguoiMua(new DateTime(2021, 1, 1), new DateTime(2021, 12, 31));
         }
 
         private void btnTHTK_Click(object sender, EventArgs e)
         {
-            dgTonKho.DataSource = DanhmucChung.THTonKho(new DateTime(2021, 1, 1), new DateTime(2021, 12, 31));
+            dgTonKho.DataSource = DuLieuBanHang.THTonKho(new DateTime(2021, 1, 1), new DateTime(2021, 12, 31));
         }
     }
 
