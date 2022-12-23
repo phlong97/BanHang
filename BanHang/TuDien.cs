@@ -8,14 +8,21 @@ namespace BanHang
 {
     internal static class TuDien
     {
-        public static readonly string HH_LaHangBan = "l1";
-        public static readonly string HH_GiaVon = "n1";
-        public static readonly string HH_TonKho = "n2";
-        public static readonly string HH_TonMin = "n3";
-        public static readonly string HH_TonMax = "n4";
-        public static readonly string HH_HinhAnh = "t1";
-        public static readonly string HH_MoTa = "t2";
-        public static readonly string HH_NgungKinhDoanh = "l2";
+        public static class DonHang
+        {
+            public const string DonHangMua = "N1",
+                DonHangBan = "X1", NguoiMuaTraLai = "N2", TraLaiNguoiBan = "X2";
+        }
+        public static class HangHoa
+        {
+            public const string LaHangBan = "l1",
+                GiaVon = "n1", TonKho = "n2", TonMin = "n3", TonMax = "n4",
+                HinhAnh = "t1", MoTa = "t2", NgungKinhDoanh = "l2";
+        }
+        public static class BangGia
+        {
+
+        }
 
         public static readonly string BG_ApDungToanQuoc = "l1";
 
