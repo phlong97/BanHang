@@ -20,6 +20,7 @@ namespace BanHang
         public static List<string> ListToanTu = new() { "<", "<=", "=", ">", ">=" };
         public static List<TenTruongTruyVan> ListTenTruong = new();
         public static List<CTCongNo> CTCongNo = new();
+        public static List<CTTienTe> CTTienTe = new();
         public static List<TheKho> CTTheKho = new();
         public static List<QuyTienTe> DSQuyTT = new();
         public static List<Kho> DSKho = new();
@@ -74,6 +75,27 @@ namespace BanHang
             });
 
             return thtk;
+        }
+        public static List<TongHopTonQuy> THTonQuy(DateTime TuNgay, DateTime DenNgay, string IdQuy = null)
+        {
+            List<TongHopTonQuy> thtq = new();
+
+            Parallel.ForEach(DSQuyTT.Where(x => string.IsNullOrEmpty(IdQuy) ? true : x.Id.Equals(IdQuy)), q =>
+            {
+                var dscn = CTTienTe.Where(x => x.Ngay <= DenNgay && string.IsNullOrEmpty(IdQuy) ? true : x.Id.Equals(IdQuy));
+
+                lock (thtq) thtq.Add(new TongHopTonQuy
+                {
+                    IdQuy = q.Id,
+                    MaQuy = q.Ma,
+                    TenQuy = q.Ten,
+                    TienDauKy = dscn.Where(x => x.Ngay < TuNgay).Sum(x => x.SoTien * (x.LoaiCT.StartsWith("T") ? 1 : -1)),
+                    TienThu = dscn.Where(x => x.Ngay <= DenNgay).Sum(x => x.SoTien * (x.LoaiCT.StartsWith("T") ? 1 : 0)),
+                    TienChi = dscn.Where(x => x.Ngay <= DenNgay).Sum(x => x.SoTien * (x.LoaiCT.StartsWith("C") ? 1 : 0))
+                });
+            });
+
+            return thtq;
         }
     }
 
@@ -193,6 +215,18 @@ namespace BanHang
         public double GTXuat { get; set; }
         public double SLCK => SLDK + SLNhap - SLXuat;
         public double GTCK => GTDK + GTNhap - GTXuat;
+    }
+    public class TongHopTonQuy
+    {
+        public string IdQuy { get; set; }
+        public string MaQuy { get; set; }
+        public string TenQuy { get; set; }
+
+        public double TienDauKy { get; set; }
+        public double TienThu { get; set; }
+        public double TienChi { get; set; }
+
+        public double TienCuoiKy => TienDauKy + TienThu - TienChi;
     }
     /// <summary>
     /// Sử dụng cho điều kiện khách hàng
@@ -1120,6 +1154,7 @@ namespace BanHang
         {
             CTTienTeCloud p = new CTTienTeCloud
             {
+                Id = this.Id,
                 IdKhach = this.IdKhach,
                 SoPhieu = this.SoPhieu,
                 LoaiCT = this.LoaiCT,
@@ -1154,7 +1189,7 @@ namespace BanHang
         {
             return new CTCongNo
             {
-                IdCT = this.IdCTLQ,
+                IdCT = this.Id,
                 IdKH = this.IdKhach,
                 LoaiCT = this.LoaiCT,
                 Ngay = this.Ngay,
@@ -1168,6 +1203,7 @@ namespace BanHang
         {
             CTTienTe p = new CTTienTe
             {
+                Id = this.Id,
                 IdKhach = this.IdKhach,
                 SoPhieu = this.SoPhieu,
                 LoaiCT = this.LoaiCT,
@@ -1187,13 +1223,37 @@ namespace BanHang
         }
         public async Task UpdateToCloud()
         {
-            //CapNhatCongNo();
-
+            CapNhatCongNo();
         }
+
+        private void CapNhatCongNo()
+        {
+            //Cập nhật lên Cloud
+            CTCongNo ct = new()
+            {
+                IdCT = this.Id,
+                SoCT = this.SoPhieu,
+                IdKH = this.IdKhach,
+                LoaiCT = this.LoaiCT,
+                Ngay = this.Ngay,
+                PSNo = LoaiCT.StartsWith("C") ? this.SoTien : 0,
+                PSCo = LoaiCT.StartsWith("T") ? this.SoTien : 0,
+                NoiDung = this.DienGiai,
+            };
+            DuLieuBanHang.CTCongNo.Add(ct);
+        }
+
         public async Task DeleteFromCloud()
         {
-            //HuyBoCongNo();
+            HuyBoCongNo();
+        }
 
+        private void HuyBoCongNo()
+        {
+            //Cần xóa trên Cloud
+            var cn = DuLieuBanHang.CTCongNo.FirstOrDefault(x => x.IdCT.Equals(this.Id));
+            if (cn != null)
+                DuLieuBanHang.CTCongNo.Remove(cn);
         }
     }
 
