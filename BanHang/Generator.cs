@@ -202,23 +202,7 @@ namespace BanHang
             }
             WriteToJsonFile<List<HangHoaCloud>>("DanhMuc/hanghoa.txt", DsHangHoa.Select(x => x.ToHangHoaCloud()).ToList());
 
-            //Tạo Chi tiết cõng nợ
-            List<CTCongNo> DSCTCongNo = new();
-            for (int i = 0; i < 1000; i++)
-            {
-                var ct = new CTCongNo()
-                {
-                    SoCT = $"CT_{random.Next(501).ToString("D5")}",
-                    LoaiCT = "X1",
-                    IdKH = $"ID_KH{random.Next(501).ToString("D5")}",
-                    Ngay = RandomDay(2020),
-                    NoiDung = "",
-                    PSNo = random.Next(10000001),
-                    PSCo = random.Next(10000001),
-                };
-                DSCTCongNo.Add(ct);
-            }
-            WriteToJsonFile<List<CTCongNo>>("DanhMuc/CTCongNo.txt", DSCTCongNo);
+
 
             //Tạo Thẻ kho
             List<TheKhoCloud> DSTheKho = new();
@@ -241,6 +225,41 @@ namespace BanHang
                 DSTheKho.Add(ct);
             }
             WriteToJsonFile<List<TheKhoCloud>>("DanhMuc/thekho.txt", DSTheKho);
+
+            //Tạo danh mục quỹ
+            List<QuyTienTe> DsQuy = new();
+            string[] dsloaiquy = "TM,TG".Split(",");
+            for (int i = 1; i <= 10; i++)
+            {
+                DsQuy.Add(new QuyTienTe
+                {
+                    Id = $"ID_QUY{i.ToString("D3")}",
+                    Ma = $"MA_QUY{i.ToString("D3")}",
+                    Ten = $"Quỹ {i}",
+                    LoaiQuy = dsloaiquy[random.Next(dsloaiquy.Count())]
+                });
+            }
+            WriteToJsonFile<List<QuyTienTe>>("DanhMuc/quytiente.txt", DsQuy);
+
+            //Tạo sổ cái tổng hợp 
+            List<SoCai> SoCaiTH = new();
+            string[] dsloaict = "X1,X2,N1,N2,T1,C1".Split(",");
+            for (int i = 0; i < 5000; i++)
+            {
+                string loaict = dsloaict[random.Next(dsloaict.Count())];
+                var ct = new SoCai()
+                {
+                    SoPhieu = $"CT_{random.Next(1001).ToString("D5")}",
+                    LoaiCT = loaict,
+                    IdKhach = $"ID_KH{random.Next(501).ToString("D5")}",
+                    IdQuy = loaict.StartsWith("C") || loaict.StartsWith("T") ? $"ID_QUY{random.Next(11).ToString("D3")}" : string.Empty,
+                    Ngay = RandomDay(2020),
+                    No = loaict.StartsWith("N") || loaict.StartsWith("T") ? random.Next(1000001) : 0,
+                    Co = loaict.StartsWith("X") || loaict.StartsWith("C") ? random.Next(1000001) : 0,
+                };
+                SoCaiTH.Add(ct);
+            }
+            WriteToJsonFile<List<SoCai>>("DanhMuc/socai.txt", SoCaiTH);
         }
 
         internal static void WriteToJsonFile<T>(string filePath, T objectToWrite, bool append = false) where T : new()

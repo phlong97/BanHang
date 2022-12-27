@@ -46,31 +46,37 @@ namespace BanHang
             var DSKH = Generator.ReadFromJsonFile<List<KhachHangCloud>>("DanhMuc/khachhang.txt");
             DuLieuBanHang.DSKhachHang.Clear();
             DuLieuBanHang.DSKhachHang.AddRange(DSKH.Select(x => x.ToKhachHang()).ToList());
-            //CTCongNo
-            var CTCN = Generator.ReadFromJsonFile<List<CTCongNo>>("DanhMuc/CTCongNo.txt");
-            DuLieuBanHang.CTCongNo.Clear();
-            DuLieuBanHang.CTCongNo.AddRange(CTCN);
+            //Quỹ tiền tệ
+            var qtt = Generator.ReadFromJsonFile<List<QuyTienTe>>("DanhMuc/quytiente.txt");
+            DuLieuBanHang.DSQuyTT.Clear();
+            DuLieuBanHang.DSQuyTT.AddRange(qtt);
             //TheKho
-            var TheKho = Generator.ReadFromJsonFile<List<TheKho>>("DanhMuc/thekho.txt");
-            DuLieuBanHang.CTTheKho.Clear();
-            DuLieuBanHang.CTTheKho.AddRange(TheKho);
+            var SoCai = Generator.ReadFromJsonFile<List<SoCai>>("DanhMuc/socai.txt");
+            DuLieuBanHang.SoCaiTongHop.Clear();
+            DuLieuBanHang.SoCaiTongHop.AddRange(SoCai);
 
-            dgTheKho.DataSource = DuLieuBanHang.CTTheKho;
-            dgKH.DataSource = DuLieuBanHang.DSKhachHang;
+
+            dgTHTonQuy.DataSource = DuLieuBanHang.DSKhachHang;
             dgNV.DataSource = DuLieuBanHang.DSNhanVien;
             dgHangHoa.DataSource = DuLieuBanHang.DSHangHoa;
             dgCTCNo.DataSource = DuLieuBanHang.CTCongNo;
+            dgSoCai.DataSource = DuLieuBanHang.SoCaiTongHop;
 
         }
 
         private void btnTHCN_Click(object sender, EventArgs e)
         {
-            dgTongHopCN.DataSource = DuLieuBanHang.THCNNguoiMua(new DateTime(2021, 1, 1), new DateTime(2021, 12, 31));
+            dgTongHopCN.DataSource = DuLieuBanHang.THCongNo(new DateTime(2021, 1, 1), new DateTime(2021, 12, 31), 0);
         }
 
         private void btnTHTK_Click(object sender, EventArgs e)
         {
             dgTonKho.DataSource = DuLieuBanHang.THTonKho(new DateTime(2021, 1, 1), new DateTime(2021, 12, 31));
+        }
+
+        private void btnTHTQ_Click(object sender, EventArgs e)
+        {
+            dgTHTonQuy.DataSource = DuLieuBanHang.THTonQuy(new DateTime(2021, 1, 1), new DateTime(2021, 12, 31), "TM");
         }
     }
 

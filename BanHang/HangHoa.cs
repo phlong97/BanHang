@@ -11,6 +11,7 @@ namespace BanHang
 {
     public static class DuLieuBanHang
     {
+        public static List<SoCai> SoCaiTongHop = new();
         public static List<NhomHang> DSNhomHang = new();
         public static List<HangHoa> DSHangHoa = new();
         public static List<BangGia> DSBangGia = new();
@@ -26,21 +27,21 @@ namespace BanHang
         public static List<Kho> DSKho = new();
         public static User user = new();
 
-        public static List<TongHopCongNo> THCNNguoiMua(DateTime TuNgay, DateTime DenNgay)
+        public static List<TongHopCongNo> THCongNo(DateTime TuNgay, DateTime DenNgay, int LoaiKhach)
         {
             List<TongHopCongNo> ttcnnm = new();
-            Parallel.ForEach(DSKhachHang.Where(x => x.LoaiKhach == 0).OrderBy(x => x.TenKhach), kh =>
+            Parallel.ForEach(DSKhachHang.Where(x => x.LoaiKhach == LoaiKhach).OrderBy(x => x.TenKhach), kh =>
             {
-                var ct = CTCongNo.Where(x => x.IdKH.Equals(kh.Id) && x.Ngay < DenNgay);
-                var cndk = kh.CongNoDauNam() + ct.Where(x => x.Ngay < TuNgay).Sum(x => x.PSNo - x.PSCo);
+                var ct = SoCaiTongHop.Where(x => x.IdKhach.Equals(kh.Id) && x.Ngay < DenNgay);
+                var cndk = kh.CongNoDauNam() + ct.Where(x => x.Ngay < TuNgay).Sum(x => x.No - x.Co);
                 ttcnnm.Add(new TongHopCongNo
                 {
                     MaKH = kh.MaKH,
                     TenKH = kh.TenKhach,
                     DKNo = Math.Max(cndk, 0),
                     DKCo = Math.Max(-cndk, 0),
-                    PSNo = ct.Where(x => x.Ngay >= TuNgay).Sum(x => x.PSNo),
-                    PSCo = ct.Where(x => x.Ngay >= TuNgay).Sum(x => x.PSCo)
+                    PSNo = ct.Where(x => x.Ngay >= TuNgay).Sum(x => x.No),
+                    PSCo = ct.Where(x => x.Ngay >= TuNgay).Sum(x => x.Co)
                 });
             });
             return ttcnnm;
@@ -76,27 +77,28 @@ namespace BanHang
 
             return thtk;
         }
-        public static List<TongHopTonQuy> THTonQuy(DateTime TuNgay, DateTime DenNgay, string IdQuy = null)
+        public static List<TongHopTonQuy> THTonQuy(DateTime TuNgay, DateTime DenNgay, string LoaiQuy = null)
         {
             List<TongHopTonQuy> thtq = new();
-
-            Parallel.ForEach(DSQuyTT.Where(x => string.IsNullOrEmpty(IdQuy) ? true : x.Id.Equals(IdQuy)), q =>
+            Parallel.ForEach(DSQuyTT.Where(x => string.IsNullOrEmpty(LoaiQuy) ? true : x.LoaiQuy.Equals(LoaiQuy)), quy =>
             {
-                var dscn = CTTienTe.Where(x => x.Ngay <= DenNgay && string.IsNullOrEmpty(IdQuy) ? true : x.Id.Equals(IdQuy));
+                var ct = SoCaiTongHop.Where(x => x.IdQuy.Equals(quy.Id) && x.Ngay < DenNgay);
 
-                lock (thtq) thtq.Add(new TongHopTonQuy
+                thtq.Add(new TongHopTonQuy
                 {
-                    IdQuy = q.Id,
-                    MaQuy = q.Ma,
-                    TenQuy = q.Ten,
-                    TienDauKy = dscn.Where(x => x.Ngay < TuNgay).Sum(x => x.SoTien * (x.LoaiCT.StartsWith("T") ? 1 : -1)),
-                    TienThu = dscn.Where(x => x.Ngay <= DenNgay).Sum(x => x.SoTien * (x.LoaiCT.StartsWith("T") ? 1 : 0)),
-                    TienChi = dscn.Where(x => x.Ngay <= DenNgay).Sum(x => x.SoTien * (x.LoaiCT.StartsWith("C") ? 1 : 0))
+                    IdQuy = quy.Id,
+                    MaQuy = quy.Ma,
+                    TenQuy = quy.Ten,
+                    TonDauKy = ct.Where(x => x.Ngay < TuNgay).Sum(x => x.No - x.Co),
+                    TongThu = ct.Where(x => x.Ngay >= TuNgay).Sum(x => x.No),
+                    TongChi = ct.Where(x => x.Ngay >= TuNgay).Sum(x => x.Co)
                 });
             });
 
             return thtq;
         }
+
+
     }
 
     public class User
@@ -216,17 +218,26 @@ namespace BanHang
         public double SLCK => SLDK + SLNhap - SLXuat;
         public double GTCK => GTDK + GTNhap - GTXuat;
     }
+    public class SoCai
+    {
+        public string SoPhieu { get; set; }
+        public string LoaiCT { get; set; }
+        public DateTime Ngay { get; set; }
+        public string IdKhach { get; set; }
+        public double No { get; set; }
+        public double Co { get; set; }
+        public string IdQuy { get; set; }
+        public string DienGiai { get; set; }
+    }
     public class TongHopTonQuy
     {
         public string IdQuy { get; set; }
         public string MaQuy { get; set; }
         public string TenQuy { get; set; }
-
-        public double TienDauKy { get; set; }
-        public double TienThu { get; set; }
-        public double TienChi { get; set; }
-
-        public double TienCuoiKy => TienDauKy + TienThu - TienChi;
+        public double TonDauKy { get; set; }
+        public double TongThu { get; set; }
+        public double TongChi { get; set; }
+        public double TonCuoiKy => TonDauKy + TongThu - TongChi;
     }
     /// <summary>
     /// Sử dụng cho điều kiện khách hàng
@@ -309,15 +320,15 @@ namespace BanHang
         public string TenNhom { get; set; } = String.Empty;
         public double GiaBan { get; set; }
         public List<DVTMoRong> DVTMoRong { get; set; } = new();
-        public bool LaHangBan { get => GetLogicField(TuDien.HH_LaHangBan); set => SetLogicField(TuDien.HH_LaHangBan, value); }
-        public double GiaVon { get => GetNumberField(TuDien.HH_GiaVon); set => SetNumberField(TuDien.HH_GiaVon, value); }
-        public double TonKho { get => GetNumberField(TuDien.HH_TonKho); set => SetNumberField(TuDien.HH_TonKho, value); }
-        public double TonMin { get => GetNumberField(TuDien.HH_TonMin); set => SetNumberField(TuDien.HH_TonMin, value); }
-        public double TonMax { get => GetNumberField(TuDien.HH_TonMax); set => SetNumberField(TuDien.HH_TonMax, value); }
+        public bool LaHangBan { get => GetLogicField(TuDien.HangHoa.LaHangBan); set => SetLogicField(TuDien.HangHoa.LaHangBan, value); }
+        public double GiaVon { get => GetNumberField(TuDien.HangHoa.GiaVon); set => SetNumberField(TuDien.HangHoa.GiaVon, value); }
+        public double TonKho { get => GetNumberField(TuDien.HangHoa.TonKho); set => SetNumberField(TuDien.HangHoa.TonKho, value); }
+        public double TonMin { get => GetNumberField(TuDien.HangHoa.TonMin); set => SetNumberField(TuDien.HangHoa.TonMin, value); }
+        public double TonMax { get => GetNumberField(TuDien.HangHoa.TonMax); set => SetNumberField(TuDien.HangHoa.TonMax, value); }
         public List<DinhMuc> LstDinhMuc { get; set; } = new();
-        public string HinhAnh { get => GetTextField("HinhAnh") ?? string.Empty; set => SetTextField("HinhAnh", value); }
-        public string MoTa { get => GetTextField("MoTa") ?? string.Empty; set => SetTextField("MoTa", value); }
-        public bool NgungKinhDoanh { get => GetLogicField("NgungKinhDoanh"); set => SetLogicField("NgungKinhDoanh", value); }
+        public string HinhAnh { get => GetTextField(TuDien.HangHoa.HinhAnh); set => SetTextField(TuDien.HangHoa.HinhAnh, value); }
+        public string MoTa { get => GetTextField(TuDien.HangHoa.MoTa) ?? string.Empty; set => SetTextField(TuDien.HangHoa.MoTa, value); }
+        public bool NgungKinhDoanh { get => GetLogicField(TuDien.HangHoa.NgungKinhDoanh); set => SetLogicField(TuDien.HangHoa.NgungKinhDoanh, value); }
         public ObjectBeginValue dn { get; set; } = new();
 
         public HangHoaCloud ToHangHoaCloud()
@@ -783,18 +794,19 @@ namespace BanHang
 
             return ds;
         }
-        public CTCongNo ToCTCongNo()
+        public SoCai ToSoCai()
         {
-            return new CTCongNo
+            return new SoCai
             {
+                SoPhieu = this.SoPhieu,
                 LoaiCT = this.LoaiCT,
+                IdKhach = this.IdKhach,
                 Ngay = this.Ngay,
-                IdKH = this.IdKhach,
-                SoCT = this.SoPhieu,
-                NoiDung = this.GhiChu,
-                PSCo = this.TongTien
+                Co = this.TongTien,
+                DienGiai = ""
             };
         }
+
 
     }
     public class DonHangMua : ObjectExtends
@@ -922,16 +934,16 @@ namespace BanHang
 
             return ds;
         }
-        public CTCongNo ToCTCongNo()
+        public SoCai ToSoCai()
         {
-            return new CTCongNo
+            return new SoCai
             {
+                SoPhieu = this.SoPhieu,
                 LoaiCT = this.LoaiCT,
+                IdKhach = this.IdKhach,
                 Ngay = this.Ngay,
-                IdKH = this.IdKhach,
-                SoCT = this.SoPhieu,
-                NoiDung = this.GhiChu,
-                PSNo = this.TongTien
+                No = this.TongTien,
+                DienGiai = ""
             };
         }
     }
@@ -1072,6 +1084,7 @@ namespace BanHang
             if (cn != null)
                 DuLieuBanHang.CTCongNo.Remove(cn);
         }
+
     }
     public class TienTrinh
     {
@@ -1095,7 +1108,7 @@ namespace BanHang
         /// 0: Tien Mat
         /// 1: Tien Gui
         /// </summary>
-        public int LoaiQuy { get; set; }
+        public string LoaiQuy { get; set; }
         public string ThongTinQuy { get; set; }
     }
 
@@ -1104,7 +1117,7 @@ namespace BanHang
         public string Id { get; set; }
         public string SoPhieu { get; set; }
         public string LoaiCT { get; set; }
-        public string IdCTLQ { get; set; }
+        public string IdCT { get; set; }
         public DateTime Ngay { get; set; }
         private string _IdKhach;
         public string IdKhach
@@ -1158,7 +1171,7 @@ namespace BanHang
                 IdKhach = this.IdKhach,
                 SoPhieu = this.SoPhieu,
                 LoaiCT = this.LoaiCT,
-                IdCTLQ = this.IdCTLQ,
+                IdCT = this.IdCT,
                 Ngay = this.Ngay,
                 DienGiai = this.DienGiai,
                 IdQuy = this.IdQuy,
@@ -1171,13 +1184,28 @@ namespace BanHang
         {
             return (CTTienTe)this.MemberwiseClone();
         }
+
+        public SoCai ToSoCai()
+        {
+            return new SoCai
+            {
+                SoPhieu = this.SoPhieu,
+                LoaiCT = this.LoaiCT,
+                IdKhach = this.IdKhach,
+                Ngay = this.Ngay,
+                Co = LoaiCT.StartsWith("C") ? this.SoTien : 0,
+                No = LoaiCT.StartsWith("T") ? this.SoTien : 0,
+                IdQuy = this.IdQuy,
+                DienGiai = ""
+            };
+        }
     }
     public class CTTienTeCloud
     {
         public string Id { get; set; }
         public string SoPhieu { get; set; }
         public string LoaiCT { get; set; }
-        public string IdCTLQ { get; set; }
+        public string IdCT { get; set; }
         public DateTime Ngay { get; set; }
         public string IdKhach { get; set; }
         public string DienGiai { get; set; }
@@ -1207,7 +1235,7 @@ namespace BanHang
                 IdKhach = this.IdKhach,
                 SoPhieu = this.SoPhieu,
                 LoaiCT = this.LoaiCT,
-                IdCTLQ = this.IdCTLQ,
+                IdCT = this.IdCT,
                 Ngay = this.Ngay,
                 DienGiai = this.DienGiai,
                 IdQuy = this.IdQuy,

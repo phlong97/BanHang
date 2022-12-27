@@ -32,41 +32,42 @@
             this.btnLoadDM = new System.Windows.Forms.Button();
             this.tabNH = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.dgSoCai = new System.Windows.Forms.DataGridView();
             this.tabPage2 = new System.Windows.Forms.TabPage();
             this.dgHangHoa = new System.Windows.Forms.DataGridView();
             this.tabPage3 = new System.Windows.Forms.TabPage();
             this.dgNV = new System.Windows.Forms.DataGridView();
             this.tabPage4 = new System.Windows.Forms.TabPage();
+            this.dgTonKho = new System.Windows.Forms.DataGridView();
             this.dg = new System.Windows.Forms.TabPage();
-            this.dgKH = new System.Windows.Forms.DataGridView();
+            this.dgTHTonQuy = new System.Windows.Forms.DataGridView();
             this.tabPage5 = new System.Windows.Forms.TabPage();
             this.dgCTCNo = new System.Windows.Forms.DataGridView();
             this.tabPage6 = new System.Windows.Forms.TabPage();
             this.dgTongHopCN = new System.Windows.Forms.DataGridView();
             this.btnTHCN = new System.Windows.Forms.Button();
-            this.dgTheKho = new System.Windows.Forms.DataGridView();
-            this.dgTonKho = new System.Windows.Forms.DataGridView();
             this.btnTHTK = new System.Windows.Forms.Button();
+            this.btnTHTQ = new System.Windows.Forms.Button();
             this.tabNH.SuspendLayout();
             this.tabPage1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dgSoCai)).BeginInit();
             this.tabPage2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgHangHoa)).BeginInit();
             this.tabPage3.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgNV)).BeginInit();
             this.tabPage4.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dgTonKho)).BeginInit();
             this.dg.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dgKH)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgTHTonQuy)).BeginInit();
             this.tabPage5.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgCTCNo)).BeginInit();
             this.tabPage6.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgTongHopCN)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.dgTheKho)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.dgTonKho)).BeginInit();
             this.SuspendLayout();
             // 
             // btnTaoDM
             // 
-            this.btnTaoDM.Location = new System.Drawing.Point(57, 37);
+            this.btnTaoDM.Location = new System.Drawing.Point(19, 37);
             this.btnTaoDM.Name = "btnTaoDM";
             this.btnTaoDM.Size = new System.Drawing.Size(134, 29);
             this.btnTaoDM.TabIndex = 0;
@@ -76,8 +77,8 @@
             // 
             // btnLoadDM
             // 
-            this.btnLoadDM.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnLoadDM.Location = new System.Drawing.Point(228, 37);
+            this.btnLoadDM.Anchor = System.Windows.Forms.AnchorStyles.Top;
+            this.btnLoadDM.Location = new System.Drawing.Point(159, 37);
             this.btnLoadDM.Name = "btnLoadDM";
             this.btnLoadDM.Size = new System.Drawing.Size(141, 29);
             this.btnLoadDM.TabIndex = 0;
@@ -100,19 +101,33 @@
             this.tabNH.Location = new System.Drawing.Point(12, 72);
             this.tabNH.Name = "tabNH";
             this.tabNH.SelectedIndex = 0;
-            this.tabNH.Size = new System.Drawing.Size(787, 379);
+            this.tabNH.Size = new System.Drawing.Size(1013, 508);
             this.tabNH.TabIndex = 1;
             // 
             // tabPage1
             // 
-            this.tabPage1.Controls.Add(this.dgTheKho);
+            this.tabPage1.Controls.Add(this.dgSoCai);
             this.tabPage1.Location = new System.Drawing.Point(4, 29);
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(779, 346);
+            this.tabPage1.Size = new System.Drawing.Size(1005, 475);
             this.tabPage1.TabIndex = 0;
-            this.tabPage1.Text = "Thẻ kho";
+            this.tabPage1.Text = "Sổ cái";
             this.tabPage1.UseVisualStyleBackColor = true;
+            // 
+            // dgSoCai
+            // 
+            this.dgSoCai.AllowUserToAddRows = false;
+            this.dgSoCai.AllowUserToDeleteRows = false;
+            this.dgSoCai.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgSoCai.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dgSoCai.Location = new System.Drawing.Point(3, 3);
+            this.dgSoCai.Name = "dgSoCai";
+            this.dgSoCai.ReadOnly = true;
+            this.dgSoCai.RowHeadersWidth = 51;
+            this.dgSoCai.RowTemplate.Height = 29;
+            this.dgSoCai.Size = new System.Drawing.Size(999, 469);
+            this.dgSoCai.TabIndex = 4;
             // 
             // tabPage2
             // 
@@ -175,30 +190,44 @@
             this.tabPage4.Text = "Tổng hợp Tồn kho";
             this.tabPage4.UseVisualStyleBackColor = true;
             // 
+            // dgTonKho
+            // 
+            this.dgTonKho.AllowUserToAddRows = false;
+            this.dgTonKho.AllowUserToDeleteRows = false;
+            this.dgTonKho.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgTonKho.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dgTonKho.Location = new System.Drawing.Point(3, 3);
+            this.dgTonKho.Name = "dgTonKho";
+            this.dgTonKho.ReadOnly = true;
+            this.dgTonKho.RowHeadersWidth = 51;
+            this.dgTonKho.RowTemplate.Height = 29;
+            this.dgTonKho.Size = new System.Drawing.Size(773, 340);
+            this.dgTonKho.TabIndex = 4;
+            // 
             // dg
             // 
-            this.dg.Controls.Add(this.dgKH);
+            this.dg.Controls.Add(this.dgTHTonQuy);
             this.dg.Location = new System.Drawing.Point(4, 29);
             this.dg.Name = "dg";
             this.dg.Padding = new System.Windows.Forms.Padding(3);
             this.dg.Size = new System.Drawing.Size(779, 346);
             this.dg.TabIndex = 4;
-            this.dg.Text = "Khách hàng";
+            this.dg.Text = "TH tồn quỹ";
             this.dg.UseVisualStyleBackColor = true;
             // 
-            // dgKH
+            // dgTHTonQuy
             // 
-            this.dgKH.AllowUserToAddRows = false;
-            this.dgKH.AllowUserToDeleteRows = false;
-            this.dgKH.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dgKH.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dgKH.Location = new System.Drawing.Point(3, 3);
-            this.dgKH.Name = "dgKH";
-            this.dgKH.ReadOnly = true;
-            this.dgKH.RowHeadersWidth = 51;
-            this.dgKH.RowTemplate.Height = 29;
-            this.dgKH.Size = new System.Drawing.Size(773, 340);
-            this.dgKH.TabIndex = 4;
+            this.dgTHTonQuy.AllowUserToAddRows = false;
+            this.dgTHTonQuy.AllowUserToDeleteRows = false;
+            this.dgTHTonQuy.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgTHTonQuy.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dgTHTonQuy.Location = new System.Drawing.Point(3, 3);
+            this.dgTHTonQuy.Name = "dgTHTonQuy";
+            this.dgTHTonQuy.ReadOnly = true;
+            this.dgTHTonQuy.RowHeadersWidth = 51;
+            this.dgTHTonQuy.RowTemplate.Height = 29;
+            this.dgTHTonQuy.Size = new System.Drawing.Size(773, 340);
+            this.dgTHTonQuy.TabIndex = 4;
             // 
             // tabPage5
             // 
@@ -253,7 +282,7 @@
             // btnTHCN
             // 
             this.btnTHCN.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnTHCN.Location = new System.Drawing.Point(425, 37);
+            this.btnTHCN.Location = new System.Drawing.Point(685, 37);
             this.btnTHCN.Name = "btnTHCN";
             this.btnTHCN.Size = new System.Drawing.Size(141, 29);
             this.btnTHCN.TabIndex = 0;
@@ -261,38 +290,10 @@
             this.btnTHCN.UseVisualStyleBackColor = true;
             this.btnTHCN.Click += new System.EventHandler(this.btnTHCN_Click);
             // 
-            // dgTheKho
-            // 
-            this.dgTheKho.AllowUserToAddRows = false;
-            this.dgTheKho.AllowUserToDeleteRows = false;
-            this.dgTheKho.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dgTheKho.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dgTheKho.Location = new System.Drawing.Point(3, 3);
-            this.dgTheKho.Name = "dgTheKho";
-            this.dgTheKho.ReadOnly = true;
-            this.dgTheKho.RowHeadersWidth = 51;
-            this.dgTheKho.RowTemplate.Height = 29;
-            this.dgTheKho.Size = new System.Drawing.Size(773, 340);
-            this.dgTheKho.TabIndex = 4;
-            // 
-            // dgTonKho
-            // 
-            this.dgTonKho.AllowUserToAddRows = false;
-            this.dgTonKho.AllowUserToDeleteRows = false;
-            this.dgTonKho.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dgTonKho.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dgTonKho.Location = new System.Drawing.Point(3, 3);
-            this.dgTonKho.Name = "dgTonKho";
-            this.dgTonKho.ReadOnly = true;
-            this.dgTonKho.RowHeadersWidth = 51;
-            this.dgTonKho.RowTemplate.Height = 29;
-            this.dgTonKho.Size = new System.Drawing.Size(773, 340);
-            this.dgTonKho.TabIndex = 4;
-            // 
             // btnTHTK
             // 
             this.btnTHTK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnTHTK.Location = new System.Drawing.Point(606, 37);
+            this.btnTHTK.Location = new System.Drawing.Point(832, 37);
             this.btnTHTK.Name = "btnTHTK";
             this.btnTHTK.Size = new System.Drawing.Size(141, 29);
             this.btnTHTK.TabIndex = 0;
@@ -300,13 +301,26 @@
             this.btnTHTK.UseVisualStyleBackColor = true;
             this.btnTHTK.Click += new System.EventHandler(this.btnTHTK_Click);
             // 
+            // btnTHTQ
+            // 
+            this.btnTHTQ.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnTHTQ.Location = new System.Drawing.Point(538, 37);
+            this.btnTHTQ.Name = "btnTHTQ";
+            this.btnTHTQ.Size = new System.Drawing.Size(141, 29);
+            this.btnTHTQ.TabIndex = 0;
+            this.btnTHTQ.Text = "Tổng hợp tồn quỹ";
+            this.btnTHTQ.UseVisualStyleBackColor = true;
+            this.btnTHTQ.Click += new System.EventHandler(this.btnTHTQ_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
+            this.ClientSize = new System.Drawing.Size(1026, 579);
             this.Controls.Add(this.tabNH);
             this.Controls.Add(this.btnTHTK);
+            this.Controls.Add(this.btnTHTQ);
             this.Controls.Add(this.btnTHCN);
             this.Controls.Add(this.btnLoadDM);
             this.Controls.Add(this.btnTaoDM);
@@ -314,19 +328,19 @@
             this.Text = "Form1";
             this.tabNH.ResumeLayout(false);
             this.tabPage1.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.dgSoCai)).EndInit();
             this.tabPage2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dgHangHoa)).EndInit();
             this.tabPage3.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dgNV)).EndInit();
             this.tabPage4.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.dgTonKho)).EndInit();
             this.dg.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.dgKH)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgTHTonQuy)).EndInit();
             this.tabPage5.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dgCTCNo)).EndInit();
             this.tabPage6.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dgTongHopCN)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.dgTheKho)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.dgTonKho)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -343,14 +357,15 @@
         private DataGridView dgHangHoa;
         private DataGridView dgNV;
         private TabPage dg;
-        private DataGridView dgKH;
+        private DataGridView dgTHTonQuy;
         private TabPage tabPage5;
         private DataGridView dgCTCNo;
         private TabPage tabPage6;
         private DataGridView dgTongHopCN;
         private Button btnTHCN;
-        private DataGridView dgTheKho;
+        private DataGridView dgSoCai;
         private DataGridView dgTonKho;
         private Button btnTHTK;
+        private Button btnTHTQ;
     }
 }
