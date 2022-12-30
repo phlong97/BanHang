@@ -16,8 +16,8 @@ namespace BanHang
         public static class HangHoa
         {
             public const string LaHangBan = "l1",
-                GiaVon = "n1", TonKho = "n2", TonMin = "n3", TonMax = "n4",
-                HinhAnh = "t1", MoTa = "t2", NgungKinhDoanh = "l2";
+                TonKho = "n1", TonMin = "n2", TonMax = "n3",
+                HinhAnh = "t1", MoTa = "t2", MaVach = "t3", NgungKinhDoanh = "l2";
         }
         public static class BangGia
         {

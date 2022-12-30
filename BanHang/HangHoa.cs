@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime;
 using System.Runtime.CompilerServices;
+using System.Security.Cryptography.Xml;
 using System.Text;
 using System.Threading.Tasks;
 using System.Transactions;
@@ -20,6 +21,7 @@ namespace BanHang
         public static List<NhanVien> DSNhanVien = new();
         public static List<string> ListToanTu = new() { "<", "<=", "=", ">", ">=" };
         public static List<TenTruongTruyVan> ListTenTruong = new();
+        public static List<GiaVon> BangGiaVon = new();
         public static List<CTCongNo> CTCongNo = new();
         public static List<CTTienTe> CTTienTe = new();
         public static List<TheKho> CTTheKho = new();
@@ -34,15 +36,16 @@ namespace BanHang
             {
                 var ct = SoCaiTongHop.Where(x => x.IdKhach.Equals(kh.Id) && x.Ngay < DenNgay);
                 var cndk = kh.CongNoDauNam() + ct.Where(x => x.Ngay < TuNgay).Sum(x => x.No - x.Co);
-                ttcnnm.Add(new TongHopCongNo
-                {
-                    MaKH = kh.MaKH,
-                    TenKH = kh.TenKhach,
-                    DKNo = Math.Max(cndk, 0),
-                    DKCo = Math.Max(-cndk, 0),
-                    PSNo = ct.Where(x => x.Ngay >= TuNgay).Sum(x => x.No),
-                    PSCo = ct.Where(x => x.Ngay >= TuNgay).Sum(x => x.Co)
-                });
+                lock (ttcnnm)
+                    ttcnnm.Add(new TongHopCongNo
+                    {
+                        MaKH = kh.MaKH,
+                        TenKH = kh.TenKhach,
+                        DKNo = Math.Max(cndk, 0),
+                        DKCo = Math.Max(-cndk, 0),
+                        PSNo = ct.Where(x => x.Ngay >= TuNgay).Sum(x => x.No),
+                        PSCo = ct.Where(x => x.Ngay >= TuNgay).Sum(x => x.Co)
+                    });
             });
             return ttcnnm;
         }
@@ -84,15 +87,16 @@ namespace BanHang
             {
                 var ct = SoCaiTongHop.Where(x => x.IdQuy.Equals(quy.Id) && x.Ngay < DenNgay);
 
-                thtq.Add(new TongHopTonQuy
-                {
-                    IdQuy = quy.Id,
-                    MaQuy = quy.Ma,
-                    TenQuy = quy.Ten,
-                    TonDauKy = ct.Where(x => x.Ngay < TuNgay).Sum(x => x.No - x.Co),
-                    TongThu = ct.Where(x => x.Ngay >= TuNgay).Sum(x => x.No),
-                    TongChi = ct.Where(x => x.Ngay >= TuNgay).Sum(x => x.Co)
-                });
+                lock (thtq)
+                    thtq.Add(new TongHopTonQuy
+                    {
+                        IdQuy = quy.Id,
+                        MaQuy = quy.Ma,
+                        TenQuy = quy.Ten,
+                        TonDauKy = ct.Where(x => x.Ngay < TuNgay).Sum(x => x.No - x.Co),
+                        TongThu = ct.Where(x => x.Ngay >= TuNgay).Sum(x => x.No),
+                        TongChi = ct.Where(x => x.Ngay >= TuNgay).Sum(x => x.Co)
+                    });
             });
 
             return thtq;
@@ -296,7 +300,18 @@ namespace BanHang
     }
 
 
+    public class GiaVon
+    {
+        public string Id { get; set; }
+        public double Gia { get; set; }
+        public double SoLuongTon { get; set; }
+        public DateTime NgayThayDoi { get; set; }
 
+        public GiaVon MakeCopy()
+        {
+            return (GiaVon)this.MemberwiseClone();
+        }
+    }
     public class HangHoa : ObjectExtends
     {
         public string Id { get; set; } = String.Empty;
@@ -319,14 +334,15 @@ namespace BanHang
         public string MaLoai { get; set; } = String.Empty;
         public string TenNhom { get; set; } = String.Empty;
         public double GiaBan { get; set; }
+
         public List<DVTMoRong> DVTMoRong { get; set; } = new();
         public bool LaHangBan { get => GetLogicField(TuDien.HangHoa.LaHangBan); set => SetLogicField(TuDien.HangHoa.LaHangBan, value); }
-        public double GiaVon { get => GetNumberField(TuDien.HangHoa.GiaVon); set => SetNumberField(TuDien.HangHoa.GiaVon, value); }
         public double TonKho { get => GetNumberField(TuDien.HangHoa.TonKho); set => SetNumberField(TuDien.HangHoa.TonKho, value); }
         public double TonMin { get => GetNumberField(TuDien.HangHoa.TonMin); set => SetNumberField(TuDien.HangHoa.TonMin, value); }
         public double TonMax { get => GetNumberField(TuDien.HangHoa.TonMax); set => SetNumberField(TuDien.HangHoa.TonMax, value); }
         public List<DinhMuc> LstDinhMuc { get; set; } = new();
         public string HinhAnh { get => GetTextField(TuDien.HangHoa.HinhAnh); set => SetTextField(TuDien.HangHoa.HinhAnh, value); }
+        public string MaVach { get => GetTextField(TuDien.HangHoa.MaVach); set => SetTextField(TuDien.HangHoa.MaVach, value); }
         public string MoTa { get => GetTextField(TuDien.HangHoa.MoTa) ?? string.Empty; set => SetTextField(TuDien.HangHoa.MoTa, value); }
         public bool NgungKinhDoanh { get => GetLogicField(TuDien.HangHoa.NgungKinhDoanh); set => SetLogicField(TuDien.HangHoa.NgungKinhDoanh, value); }
         public ObjectBeginValue dn { get; set; } = new();
@@ -356,6 +372,12 @@ namespace BanHang
             hh.dn = this.dn.MakeCopy();
             hh.CopySource(this);
             return hh;
+        }
+        public double LayGiaVon(string IdHH, DateTime Ngay)
+        {
+            var GiaVon = DuLieuBanHang.BangGiaVon.Where(x => x.Id.Equals(IdHH) && x.NgayThayDoi <= Ngay)
+                .OrderBy(x => x.NgayThayDoi).LastOrDefault();
+            return GiaVon == null ? 0 : GiaVon.Gia;
         }
         public double GiaTriTonKhoDauNam(string? idKho = null, int nam = 0)
         {
@@ -626,6 +648,7 @@ namespace BanHang
         public string TenHang { get; set; } = string.Empty;
         public double SoLuong { get; set; }
         public double DonGia { get; set; }
+        public double GiaVon { get; set; }
         public double ThanhTien => SoLuong * DonGia;
         public bool LaHangKM { get; set; }
         public DonHangCTCloud ToDHCTCloud()
@@ -635,6 +658,7 @@ namespace BanHang
                 IdHH = this.IdHH,
                 SoLuong = this.SoLuong,
                 DonGia = this.DonGia,
+                GiaVon = this.GiaVon,
                 LaHangKM = this.LaHangKM
             };
         }
@@ -649,6 +673,7 @@ namespace BanHang
         public string IdHH { get; set; } = String.Empty;
         public double SoLuong { get; set; }
         public double DonGia { get; set; }
+        public double GiaVon { get; set; }
         public bool LaHangKM { get; set; }
         public DonHangCT ToDHCT()
         {
@@ -657,6 +682,7 @@ namespace BanHang
                 IdHH = this.IdHH,
                 SoLuong = this.SoLuong,
                 DonGia = this.DonGia,
+                GiaVon = this.GiaVon,
                 LaHangKM = this.LaHangKM
             };
         }
@@ -1025,6 +1051,33 @@ namespace BanHang
             dh.CTDonHang = this.CTDonHang.Select(x => x.MakeCopy()).ToList();
             dh.CopySource(this);
             return dh;
+        }
+        public void CapNhatGiaVon()
+        {
+            if (LoaiCT.Equals("N1"))
+            {
+                Parallel.ForEach(CTDonHang, ct =>
+                {
+                    var hanghoa = DuLieuBanHang.DSHangHoa.FirstOrDefault(x => x.Id.Equals(ct.IdHH));
+                    if (hanghoa != null)
+                    {
+                        double GiaVonCu = hanghoa.LayGiaVon(hanghoa.Id, this.Ngay);
+                        double SLTon = DuLieuBanHang.CTTheKho.Where(x => x.IdHH.Equals(hanghoa.Id) && x.Ngay < this.Ngay).
+                            Sum(x => x.SLNhap - x.SLXuat) + hanghoa.SoLuongTonKhoDauNam();
+                        //Cần công thức tính chi phí
+                        double ChiPhi = 0;
+                        //Lưu lên cloud
+                        lock (DuLieuBanHang.BangGiaVon)
+                            DuLieuBanHang.BangGiaVon.Add(new GiaVon
+                            {
+                                Id = hanghoa.Id,
+                                NgayThayDoi = this.Ngay,
+                                Gia = (GiaVonCu * SLTon + ct.SoLuong * ct.DonGia + ChiPhi) / (SLTon + ct.SoLuong),
+                                SoLuongTon = SLTon + ct.SoLuong
+                            });
+                    }
+                });
+            }
         }
         public async Task UpdateToCloud()
         {
