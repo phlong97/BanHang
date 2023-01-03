@@ -103,13 +103,12 @@ namespace BanHang
                     TenHH = $"Hàng hóa {i + 1}",
                     IdNhom = $"ID_NH{random.Next(0, 50).ToString("D4")}",
                     Dvt = Dvt.Split(",")[random.Next(0, 10)],
-                    GiaVon = random.Next(1000, 500000),
                     LaHangBan = random.NextDouble() > 0.5,
                     NgungKinhDoanh = false,
                     TonMin = 1,
                     TonMax = 100,
                 };
-                hh.GiaBan = hh.GiaVon + random.Next(5000, 50000);
+                hh.GiaBan = random.Next(5000, 50000);
                 hh.TonKho = hh.TonMax - 1;
                 DsHangHoa.Add(hh);
             }
@@ -190,13 +189,12 @@ namespace BanHang
                     MaLoai = $"MA_LOAI{i.ToString("D5")}",
                     IdNhom = $"ID_NH{random.Next(0, 50).ToString("D4")}",
                     Dvt = Dvt.Split(",")[random.Next(0, 10)],
-                    GiaVon = random.Next(1000, 500000),
                     LaHangBan = random.NextDouble() > 0.5,
                     NgungKinhDoanh = false,
                     TonMin = 1,
                     TonMax = 100,
                 };
-                hh.GiaBan = hh.GiaVon + random.Next(5000, 50000);
+                hh.GiaBan = random.Next(5000, 50000);
                 hh.TonKho = hh.TonMax - 1;
                 DsHangHoa.Add(hh);
             }
@@ -241,25 +239,82 @@ namespace BanHang
             }
             WriteToJsonFile<List<QuyTienTe>>("DanhMuc/quytiente.txt", DsQuy);
 
-            //Tạo sổ cái tổng hợp 
-            List<SoCai> SoCaiTH = new();
-            string[] dsloaict = "X1,X2,N1,N2,T1,C1".Split(",");
-            for (int i = 0; i < 5000; i++)
+            //Tạo đơn hàng
+            List<DonHangCloud> DsDonHang = new();
+            string[] dsloaict = "X1,X2,N1,N2".Split(",");
+            for (int i = 0; i < 10; i++)
             {
-                string loaict = dsloaict[random.Next(dsloaict.Count())];
-                var ct = new SoCai()
+                var dh = new DonHangCloud()
                 {
-                    SoPhieu = $"CT_{random.Next(1001).ToString("D5")}",
-                    LoaiCT = loaict,
                     IdKhach = $"ID_KH{random.Next(501).ToString("D5")}",
-                    IdQuy = loaict.StartsWith("C") || loaict.StartsWith("T") ? $"ID_QUY{random.Next(11).ToString("D3")}" : string.Empty,
-                    Ngay = RandomDay(2020),
-                    No = loaict.StartsWith("N") || loaict.StartsWith("T") ? random.Next(1000001) : 0,
-                    Co = loaict.StartsWith("X") || loaict.StartsWith("C") ? random.Next(1000001) : 0,
+                    IdBangGia = $"ID_BG{random.Next(11).ToString("D3")}",
+                    IdKho = $"ID_KHO{random.Next(51).ToString("D4")}",
+                    IdNV = $"ID_NV{random.Next(11).ToString("D4")}",
+                    LoaiCT = dsloaict[random.Next(dsloaict.Count())],
+                    SoPhieu = $"CT_{i.ToString("D5")}",
+                    TienKM = random.Next(5000, 10001),
+                    Ngay = RandomDay(2022),
+                    CTDonHang = new()
+                    {
+                        new DonHangCTCloud()
+                        {
+                            IdHH = $"ID_HH{random.Next(5001).ToString("D5")}",
+                            SoLuong = random.Next(11),
+                            DonGia = random.Next(50001),
+                        },
+                        new DonHangCTCloud()
+                        {
+                            IdHH = $"ID_HH{random.Next(5001).ToString("D5")}",
+                            SoLuong = random.Next(11),
+                            DonGia = random.Next(50001),
+                        }
+                    }
+
                 };
-                SoCaiTH.Add(ct);
+                dh.TienHang = dh.CTDonHang.Sum(x => x.SoLuong * x.DonGia);
+                dh.TongTien = dh.TienHang - dh.TienKM;
+                DsDonHang.Add(dh);
             }
-            WriteToJsonFile<List<SoCai>>("DanhMuc/socai.txt", SoCaiTH);
+            WriteToJsonFile<List<DonHangCloud>>("DanhMuc/donhang.txt", DsDonHang);
+
+            //Tạo phiếu thu chi
+            List<CTTienTeCloud> DsPhieuTC = new();
+            string[] dsloaip = "T1,C1".Split(",");
+            for (int i = 0; i < 10; i++)
+            {
+                var p = new CTTienTeCloud()
+                {
+                    LoaiCT = dsloaip[random.Next(dsloaip.Count())],
+                    SoPhieu = $"CT_{i.ToString("D5")}",
+                    Ngay = RandomDay(2022),
+                    IdKhach = $"ID_KH{random.Next(501).ToString("D5")}",
+                    IdQuy = $"ID_QUY{random.Next(11).ToString("D3")}",
+                    SoTien = random.Next(1000000, 5000001),
+
+                };
+                DsPhieuTC.Add(p);
+            }
+            WriteToJsonFile<List<CTTienTeCloud>>("DanhMuc/thuchi.txt", DsPhieuTC);
+
+            //Tạo sổ cái tổng hợp 
+            //List<SoCai> SoCaiTH = new();
+            //string[] dsloaict = "X1,X2,N1,N2,T1,C1".Split(",");
+            //for (int i = 0; i < 5000; i++)
+            //{
+            //    string loaict = dsloaict[random.Next(dsloaict.Count())];
+            //    var ct = new SoCai()
+            //    {
+            //        SoPhieu = $"CT_{random.Next(1001).ToString("D5")}",
+            //        LoaiCT = loaict,
+            //        IdKhach = $"ID_KH{random.Next(501).ToString("D5")}",
+            //        IdQuy = loaict.StartsWith("C") || loaict.StartsWith("T") ? $"ID_QUY{random.Next(11).ToString("D3")}" : string.Empty,
+            //        Ngay = RandomDay(2020),
+            //        No = loaict.StartsWith("N") || loaict.StartsWith("T") ? random.Next(1000001) : 0,
+            //        Co = loaict.StartsWith("X") || loaict.StartsWith("C") ? random.Next(1000001) : 0,
+            //    };
+            //    SoCaiTH.Add(ct);
+            //}
+            //WriteToJsonFile<List<SoCai>>("DanhMuc/socai.txt", SoCaiTH);
         }
 
         internal static void WriteToJsonFile<T>(string filePath, T objectToWrite, bool append = false) where T : new()

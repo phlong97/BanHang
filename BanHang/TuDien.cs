@@ -34,5 +34,9 @@ namespace BanHang
         public static readonly string EMail = "t1";
         public static readonly string DiaChi = "t2";
         public static readonly string DienThoai = "t3";
+        public static class DoiTuong
+        {
+            public const string Quy = "Q", PhapNhan = "PN", DoanhThu = "DT", ChiPhi = "CP", Thue = "THUE";
+        }
     }
 }

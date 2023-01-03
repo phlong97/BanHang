@@ -50,23 +50,25 @@ namespace BanHang
             var qtt = Generator.ReadFromJsonFile<List<QuyTienTe>>("DanhMuc/quytiente.txt");
             DuLieuBanHang.DSQuyTT.Clear();
             DuLieuBanHang.DSQuyTT.AddRange(qtt);
-            //TheKho
-            var SoCai = Generator.ReadFromJsonFile<List<SoCai>>("DanhMuc/socai.txt");
-            DuLieuBanHang.SoCaiTongHop.Clear();
-            DuLieuBanHang.SoCaiTongHop.AddRange(SoCai);
+            //DonHang
+            var DonHang = Generator.ReadFromJsonFile<List<DonHangCloud>>("DanhMuc/donhang.txt");
+            DuLieuBanHang.DSDonHang.Clear();
+            DuLieuBanHang.DSDonHang.AddRange(DonHang);
+            //Thu chi
+            var ThuChi = Generator.ReadFromJsonFile<List<CTTienTeCloud>>("DanhMuc/thuchi.txt");
+            DuLieuBanHang.CTTienTe.Clear();
+            DuLieuBanHang.CTTienTe.AddRange(ThuChi);
 
 
-            dgTHTonQuy.DataSource = DuLieuBanHang.DSKhachHang;
-            dgNV.DataSource = DuLieuBanHang.DSNhanVien;
+            dgThuChi.DataSource = DuLieuBanHang.CTTienTe;
+            dgDonHang.DataSource = DuLieuBanHang.DSDonHang;
             dgHangHoa.DataSource = DuLieuBanHang.DSHangHoa;
-            dgCTCNo.DataSource = DuLieuBanHang.CTCongNo;
-            dgSoCai.DataSource = DuLieuBanHang.SoCaiTongHop;
 
         }
 
         private void btnTHCN_Click(object sender, EventArgs e)
         {
-            dgTongHopCN.DataSource = DuLieuBanHang.THCongNo(new DateTime(2021, 1, 1), new DateTime(2021, 12, 31), 0);
+            dgTongHopCN.DataSource = DuLieuBanHang.THCongNo(new DateTime(2022, 1, 1), new DateTime(2022, 12, 31), 0);
         }
 
         private void btnTHTK_Click(object sender, EventArgs e)
@@ -77,6 +79,19 @@ namespace BanHang
         private void btnTHTQ_Click(object sender, EventArgs e)
         {
             dgTHTonQuy.DataSource = DuLieuBanHang.THTonQuy(new DateTime(2021, 1, 1), new DateTime(2021, 12, 31), "TM");
+        }
+
+        private async void btnTaoSoCai_Click(object sender, EventArgs e)
+        {
+            if (!DuLieuBanHang.DaLapSo)
+            {
+                await DuLieuBanHang.TaoSoCai();
+                //dgSoCai.DataSource = DuLieuBanHang.SoCaiTongHop;
+                //return;
+            }
+
+
+            dgSoCai.DataSource = DuLieuBanHang.SoCaiTongHop;
         }
     }
 

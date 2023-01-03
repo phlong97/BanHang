@@ -12,7 +12,10 @@ namespace BanHang
 {
     public static class DuLieuBanHang
     {
+        public static bool DaLapSo = false;
+        public static bool SystemBusy = false;
         public static List<SoCai> SoCaiTongHop = new();
+        public static List<TheKho> SoKhoTongHop = new();
         public static List<NhomHang> DSNhomHang = new();
         public static List<HangHoa> DSHangHoa = new();
         public static List<BangGia> DSBangGia = new();
@@ -22,13 +25,23 @@ namespace BanHang
         public static List<string> ListToanTu = new() { "<", "<=", "=", ">", ">=" };
         public static List<TenTruongTruyVan> ListTenTruong = new();
         public static List<GiaVon> BangGiaVon = new();
-        public static List<CTCongNo> CTCongNo = new();
-        public static List<CTTienTe> CTTienTe = new();
-        public static List<TheKho> CTTheKho = new();
+        public static List<CTTienTeCloud> CTTienTe = new();
         public static List<QuyTienTe> DSQuyTT = new();
         public static List<Kho> DSKho = new();
+        public static List<DonHangCloud> DSDonHang = new();
         public static User user = new();
 
+        public static async Task TaoSoCai()
+        {
+            if (SystemBusy) return;
+            SystemBusy = true;
+            await Task.Run(() =>
+            {
+                SoCaiTongHop.AddRange(DuLieuBanHang.DSDonHang.Select(x => x.ToSoCai()));
+                SoCaiTongHop.AddRange(DuLieuBanHang.CTTienTe.Select(x => x.ToSoCai()));
+            });
+            SystemBusy = false;
+        }
         public static List<TongHopCongNo> THCongNo(DateTime TuNgay, DateTime DenNgay, int LoaiKhach)
         {
             List<TongHopCongNo> ttcnnm = new();
@@ -55,7 +68,7 @@ namespace BanHang
 
             Parallel.ForEach(DSHangHoa, hh =>
             {
-                var dstk = CTTheKho.Where(x => x.Ngay <= DenNgay && x.IdHH.Equals(hh.Id));
+                var dstk = SoKhoTongHop.Where(x => x.Ngay <= DenNgay && x.IdHH.Equals(hh.Id));
 
                 lock (thtk) thtk.Add(new TongHopTonKho
                 {
@@ -117,23 +130,7 @@ namespace BanHang
         public string TenKho { get; set; }
         public string DiaChi { get; set; }
     }
-    public class CTCongNo
-    {
-        public string IdCT { get; set; }
-        public string SoCT { get; set; }
-        public string LoaiCT { get; set; }
-        public DateTime Ngay { get; set; }
-        public string NoiDung { get; set; }
-        public string IdKH { get; set; }
-        /// <summary>
-        /// Nợ: Mua hàng của người bán, nhận tiền của người mua, nhận hàng trả lại,...
-        /// </summary>
-        public double PSNo { get; set; }
-        /// <summary>
-        /// Có: Trả cho người bán, Trả hàng cho người bán, xuất bán,...
-        /// </summary>
-        public double PSCo { get; set; }
-    }
+
     public class TongHopCongNo
     {
         public string MaKH { get; set; }
@@ -983,7 +980,7 @@ namespace BanHang
         /// 2: Đã giao hàng
         /// </summary>
         public int TrangThai { get; set; }
-        public string LoaiCT { get; set; }
+        public string LoaiCT { get; set; } = string.Empty;
         public DateTime Ngay { get; set; }
         public string SoPhieu { get; set; } = string.Empty;
         public string IdKhach { get; set; } = string.Empty;
@@ -994,7 +991,7 @@ namespace BanHang
         public double TienKM { get; set; }
         public double TongTien { get; set; }
         public double DiemThuong { get; set; }
-        public string IdKho { get; set; }
+        public string IdKho { get; set; } = string.Empty;
         public string GhiChu { get; set; } = string.Empty;
         public List<TienTrinh> DsTienTrinh { get; set; } = new();
         public DonHangMua ToDonHangMua()
@@ -1062,11 +1059,11 @@ namespace BanHang
                     if (hanghoa != null)
                     {
                         double GiaVonCu = hanghoa.LayGiaVon(hanghoa.Id, this.Ngay);
-                        double SLTon = DuLieuBanHang.CTTheKho.Where(x => x.IdHH.Equals(hanghoa.Id) && x.Ngay < this.Ngay).
+                        double SLTon = DuLieuBanHang.SoKhoTongHop.Where(x => x.IdHH.Equals(hanghoa.Id) && x.Ngay < this.Ngay).
                             Sum(x => x.SLNhap - x.SLXuat) + hanghoa.SoLuongTonKhoDauNam();
                         //Cần công thức tính chi phí
                         double ChiPhi = 0;
-                        //Lưu lên cloud
+                        //Tĩnh: Lưu lên cloud
                         lock (DuLieuBanHang.BangGiaVon)
                             DuLieuBanHang.BangGiaVon.Add(new GiaVon
                             {
@@ -1079,9 +1076,21 @@ namespace BanHang
                 });
             }
         }
+        public SoCai ToSoCai()
+        {
+            return new SoCai
+            {
+                SoPhieu = this.SoPhieu,
+                LoaiCT = this.LoaiCT,
+                Ngay = this.Ngay,
+                IdKhach = this.IdKhach,
+                No = LoaiCT.StartsWith("N") ? this.TongTien : 0,
+                Co = LoaiCT.StartsWith("X") ? this.TongTien : 0,
+                DienGiai = this.GhiChu
+            };
+        }
         public async Task UpdateToCloud()
         {
-            CapNhatCongNo();
             CapNhatTheKho();
         }
 
@@ -1101,23 +1110,7 @@ namespace BanHang
                 SLXuat = this.LoaiCT.StartsWith("X") ? ct.SoLuong : 0,
                 IdKhoXuat = this.LoaiCT.StartsWith("X") ? IdKho : string.Empty,
             }).ToList();
-            DuLieuBanHang.CTTheKho.AddRange(ds);
-        }
-
-        private void CapNhatCongNo()
-        {
-            CTCongNo ct = new()
-            {
-                IdCT = this.Id,
-                SoCT = this.SoPhieu,
-                IdKH = this.IdKhach,
-                LoaiCT = this.LoaiCT,
-                Ngay = this.Ngay,
-                PSNo = LoaiCT.StartsWith("X") ? this.TongTien : 0,
-                PSCo = LoaiCT.StartsWith("N") ? this.TongTien : 0,
-                NoiDung = this.GhiChu,
-            };
-            DuLieuBanHang.CTCongNo.Add(ct);
+            DuLieuBanHang.SoKhoTongHop.AddRange(ds);
         }
 
         public async Task DeleteFromCloud()
@@ -1128,14 +1121,12 @@ namespace BanHang
 
         private void HuyBoTheKho()
         {
-            DuLieuBanHang.CTTheKho.RemoveAll(x => x.IdCT.Equals(this.Id));
+            DuLieuBanHang.SoKhoTongHop.RemoveAll(x => x.IdCT.Equals(this.Id));
         }
 
         private void HuyBoCongNo()
         {
-            var cn = DuLieuBanHang.CTCongNo.FirstOrDefault(x => x.IdCT.Equals(this.Id));
-            if (cn != null)
-                DuLieuBanHang.CTCongNo.Remove(cn);
+
         }
 
     }
@@ -1201,21 +1192,6 @@ namespace BanHang
         }
         public string TenQuy { get; set; }
         public string IdUser { get; set; }
-
-        public CTCongNo ToCTCongNo()
-        {
-            return new CTCongNo
-            {
-                IdCT = this.Id,
-                IdKH = this.IdKhach,
-                LoaiCT = this.LoaiCT,
-                Ngay = this.Ngay,
-                SoCT = this.SoPhieu,
-                NoiDung = this.DienGiai,
-                PSCo = this.LoaiCT.StartsWith("T") ? this.SoTien : 0,
-                PSNo = this.LoaiCT.StartsWith("C") ? this.SoTien : 0
-            };
-        }
         public CTTienTeCloud ToCTTienTeuCloud()
         {
             CTTienTeCloud p = new CTTienTeCloud
@@ -1238,20 +1214,7 @@ namespace BanHang
             return (CTTienTe)this.MemberwiseClone();
         }
 
-        public SoCai ToSoCai()
-        {
-            return new SoCai
-            {
-                SoPhieu = this.SoPhieu,
-                LoaiCT = this.LoaiCT,
-                IdKhach = this.IdKhach,
-                Ngay = this.Ngay,
-                Co = LoaiCT.StartsWith("C") ? this.SoTien : 0,
-                No = LoaiCT.StartsWith("T") ? this.SoTien : 0,
-                IdQuy = this.IdQuy,
-                DienGiai = ""
-            };
-        }
+
     }
     public class CTTienTeCloud
     {
@@ -1266,18 +1229,18 @@ namespace BanHang
         public string IdQuy { get; set; }
         public string IdUser { get; set; }
 
-        public CTCongNo ToCTCongNo()
+        public SoCai ToSoCai()
         {
-            return new CTCongNo
+            return new SoCai
             {
-                IdCT = this.Id,
-                IdKH = this.IdKhach,
+                SoPhieu = this.SoPhieu,
                 LoaiCT = this.LoaiCT,
+                IdKhach = this.IdKhach,
                 Ngay = this.Ngay,
-                SoCT = this.SoPhieu,
-                NoiDung = this.DienGiai,
-                PSCo = this.LoaiCT.StartsWith("T") ? this.SoTien : 0,
-                PSNo = this.LoaiCT.StartsWith("C") ? this.SoTien : 0
+                Co = LoaiCT.StartsWith("C") ? this.SoTien : 0,
+                No = LoaiCT.StartsWith("T") ? this.SoTien : 0,
+                IdQuy = this.IdQuy,
+                DienGiai = this.DienGiai
             };
         }
         public CTTienTe ToCTTienTe()
@@ -1304,25 +1267,10 @@ namespace BanHang
         }
         public async Task UpdateToCloud()
         {
-            CapNhatCongNo();
+
         }
 
-        private void CapNhatCongNo()
-        {
-            //Cập nhật lên Cloud
-            CTCongNo ct = new()
-            {
-                IdCT = this.Id,
-                SoCT = this.SoPhieu,
-                IdKH = this.IdKhach,
-                LoaiCT = this.LoaiCT,
-                Ngay = this.Ngay,
-                PSNo = LoaiCT.StartsWith("C") ? this.SoTien : 0,
-                PSCo = LoaiCT.StartsWith("T") ? this.SoTien : 0,
-                NoiDung = this.DienGiai,
-            };
-            DuLieuBanHang.CTCongNo.Add(ct);
-        }
+
 
         public async Task DeleteFromCloud()
         {
@@ -1331,10 +1279,7 @@ namespace BanHang
 
         private void HuyBoCongNo()
         {
-            //Cần xóa trên Cloud
-            var cn = DuLieuBanHang.CTCongNo.FirstOrDefault(x => x.IdCT.Equals(this.Id));
-            if (cn != null)
-                DuLieuBanHang.CTCongNo.Remove(cn);
+            //Cần xóa trên Cloud            
         }
     }
 
