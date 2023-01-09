@@ -13,9 +13,9 @@ namespace BanHang
         public Dictionary<string, double> nf { get; set; } = new();
         public Dictionary<string, bool> lf { get; set; } = new();
 
-        public string GetTextField(string key)
+        public string GetTextField(string key, string defaultValue = "")
         {
-            return tf.ContainsKey(key) ? tf[key] : string.Empty;
+            return tf.ContainsKey(key) ? tf[key] : defaultValue;
         }
 
         public void SetTextField(string key, string value)
@@ -24,9 +24,9 @@ namespace BanHang
             else tf.Add(key, value);
         }
 
-        public DateTime GetDateField(string key)
+        public DateTime GetDateField(string key, DateTime defaultValue = default(DateTime))
         {
-            return df.ContainsKey(key) ? df[key] : DateTime.MinValue;
+            return df.ContainsKey(key) ? df[key] : defaultValue;
         }
 
         public void SetDateField(string key, DateTime value)
@@ -35,9 +35,9 @@ namespace BanHang
             else df.Add(key, value);
         }
 
-        public double GetNumberField(string key)
+        public double GetNumberField(string key, double defaultValue = 0)
         {
-            return nf.ContainsKey(key) ? nf[key] : 0;
+            return nf.ContainsKey(key) ? nf[key] : defaultValue;
         }
 
         public void SetNumberField(string key, double value)
@@ -45,9 +45,9 @@ namespace BanHang
             if (nf.ContainsKey(key)) nf[key] = value;
             else nf.Add(key, value);
         }
-        public bool GetLogicField(string key)
+        public bool GetLogicField(string key, bool defaultValue = false)
         {
-            return lf.ContainsKey(key) ? lf[key] : false;
+            return lf.ContainsKey(key) ? lf[key] : defaultValue;
         }
 
         public void SetLogicField(string key, bool value)

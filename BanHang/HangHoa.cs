@@ -24,13 +24,17 @@ namespace BanHang
         public static List<NhanVien> DSNhanVien = new();
         public static List<string> ListToanTu = new() { "<", "<=", "=", ">", ">=" };
         public static List<TenTruongTruyVan> ListTenTruong = new();
-        public static List<GiaVon> BangGiaVon = new();
+        public static List<GiaVon_BTV> BangGiaVon = new();
         public static List<CTTienTeCloud> CTTienTe = new();
         public static List<QuyTienTe> DSQuyTT = new();
         public static List<Kho> DSKho = new();
         public static List<DonHangCloud> DSDonHang = new();
         public static User user = new();
 
+        public static double LayGiaVon(string IdHH, int thang)
+        {
+            return BangGiaVon.FirstOrDefault(x => x.IdHH.Equals(IdHH))?.GetGiaVon(thang) ?? 0;
+        }
         public static async Task TaoSoCai()
         {
             if (SystemBusy) return;
@@ -224,11 +228,25 @@ namespace BanHang
         public string SoPhieu { get; set; }
         public string LoaiCT { get; set; }
         public DateTime Ngay { get; set; }
-        public string IdKhach { get; set; }
-        public double No { get; set; }
-        public double Co { get; set; }
-        public string IdQuy { get; set; }
         public string DienGiai { get; set; }
+        /// <summary>
+        /// DT Quy:Q -DT PhapNhan:PN -DT DoanhThu: -DT ChiPhi -DT Thue
+        /// </summary>
+        public string LoaiDTNo { get; set; }
+        public string IdNo { get; set; }
+        public string LoaiDTCo { get; set; }
+        public string IdCo { get; set; }
+        public double SoTien { get; set; }
+
+        //Xuat ban:
+        //- Doanh Thu: Idno ; khach ; idco: ma doanh thu
+        //- Chi Phí - giá vốn: idno: ma gia von (ma rieng); idco: hang ton kho
+        //- Thuế: idno: ma khach; idco: thuế (mã riêng)
+
+        //Mua ngoai:
+        //- Tien hang: idco: khach; idno: hang ton kho (ma rieng)
+        //- Chi phi:  idco: khach; idno: chi phi mua hang (ma rieng)
+        //- Thue: idco: khach; idno: thue (ma rieng)
     }
     public class TongHopTonQuy
     {
@@ -297,6 +315,52 @@ namespace BanHang
     }
 
 
+    public class GiaVon_BTV
+    {
+        public string IdHH { get; set; }
+
+        public Dictionary<int, double> GiaVon = new();
+
+        public double GetGiaVon(int thang) => GiaVon.ContainsKey(thang) ? GiaVon[thang] : 0;
+
+        public void SetGiaVon(int thang, double giaVon)
+        {
+            if (GiaVon.ContainsKey(thang)) GiaVon[thang] = giaVon;
+            else GiaVon.Add(thang, giaVon);
+        }
+
+        public DateTime NgayDauThang(int thang) => new DateTime(DateTime.Now.Year, thang, 1);
+        public DateTime NgayCuoiThang(int thang) => new DateTime(DateTime.Now.Year, thang, DateTime.DaysInMonth(DateTime.Now.Year, thang));
+
+        public void UpdateGiaVon(int thang)
+        {
+            var soLuongTonTruoc = DuLieuBanHang.SoKhoTongHop.Where(x => x.Ngay < NgayDauThang(thang) && x.IdHH.Equals(IdHH)).Sum(x => x.SLNhap - x.SLXuat) +
+                DuLieuBanHang.DSHangHoa.FirstOrDefault(x => x.Id.Equals(IdHH))?.SoLuongTonKhoDauNam() ?? 0;
+            var giaTriTonTruoc = DuLieuBanHang.SoKhoTongHop.Where(x => x.Ngay < NgayDauThang(thang) && x.IdHH.Equals(IdHH)).Sum(x => (x.SLNhap - x.SLXuat) * x.DonGiaVon) +
+                DuLieuBanHang.DSHangHoa.FirstOrDefault(x => x.Id.Equals(IdHH))?.GiaTriTonKhoDauNam() ?? 0;
+            for (int i = thang; i <= 12; i++)
+            {
+                var listNhap = DuLieuBanHang.SoKhoTongHop.Where(x => x.Ngay >= NgayDauThang(thang) && x.Ngay <= NgayCuoiThang(thang) && x.IdHH.Equals(IdHH)).ToList();
+                Parallel.ForEach(listNhap, tk => tk.DonGiaVon = tk.DonGia);
+
+                var soLuongNhap = listNhap.Sum(x => x.SLNhap);
+                var giaTriNhap = listNhap.Sum(x => x.SLNhap * x.DonGia);
+                var giaVon = (soLuongTonTruoc + soLuongNhap) == 0 ? 0 : (giaTriTonTruoc + giaTriNhap) / (soLuongTonTruoc + soLuongNhap);
+                SetGiaVon(i, giaVon);
+                var listXuat = DuLieuBanHang.SoKhoTongHop.Where(x => x.Ngay >= NgayDauThang(thang) && x.Ngay <= NgayCuoiThang(thang) && x.IdHH.Equals(IdHH)).ToList();
+
+
+                var soLuongXuat = listXuat.Sum(x => x.SLXuat);
+
+                soLuongTonTruoc += soLuongNhap - soLuongXuat;
+                giaTriTonTruoc += giaTriNhap - soLuongXuat * giaVon;
+
+
+                Parallel.ForEach(listXuat, tk => tk.DonGiaVon = giaVon);
+
+            }
+        }
+    }
     public class GiaVon
     {
         public string Id { get; set; }
@@ -667,7 +731,8 @@ namespace BanHang
 
     public class DonHangCTCloud
     {
-        public string IdHH { get; set; } = String.Empty;
+        public string IdHH { get; set; }
+        public string MaDoiTuong { get; set; }
         public double SoLuong { get; set; }
         public double DonGia { get; set; }
         public double GiaVon { get; set; }
@@ -1061,15 +1126,14 @@ namespace BanHang
                         double GiaVonCu = hanghoa.LayGiaVon(hanghoa.Id, this.Ngay);
                         double SLTon = DuLieuBanHang.SoKhoTongHop.Where(x => x.IdHH.Equals(hanghoa.Id) && x.Ngay < this.Ngay).
                             Sum(x => x.SLNhap - x.SLXuat) + hanghoa.SoLuongTonKhoDauNam();
-                        //Cần công thức tính chi phí
-                        double ChiPhi = 0;
+
                         //Tĩnh: Lưu lên cloud
                         lock (DuLieuBanHang.BangGiaVon)
                             DuLieuBanHang.BangGiaVon.Add(new GiaVon
                             {
                                 Id = hanghoa.Id,
                                 NgayThayDoi = this.Ngay,
-                                Gia = (GiaVonCu * SLTon + ct.SoLuong * ct.DonGia + ChiPhi) / (SLTon + ct.SoLuong),
+                                Gia = (GiaVonCu * SLTon + ct.SoLuong * ct.DonGia) / (SLTon + ct.SoLuong),
                                 SoLuongTon = SLTon + ct.SoLuong
                             });
                     }
@@ -1156,6 +1220,13 @@ namespace BanHang
         public string ThongTinQuy { get; set; }
     }
 
+    public class CTThuChi
+    {
+        public string IdQuy { get; set; }
+        public string MaDoiTuong { get; set; }
+        public string DienGiai { get; set; }
+        public double SoTien { get; set; }
+    }
     public class CTTienTe
     {
         public string Id { get; set; }
@@ -1224,24 +1295,28 @@ namespace BanHang
         public string IdCT { get; set; }
         public DateTime Ngay { get; set; }
         public string IdKhach { get; set; }
-        public string DienGiai { get; set; }
-        public double SoTien { get; set; }
-        public string IdQuy { get; set; }
+        public List<CTThuChi> ChiTiet { get; set; }
         public string IdUser { get; set; }
 
-        public SoCai ToSoCai()
+        public List<SoCai> ToSoCai()
         {
-            return new SoCai
+            List<SoCai> lst = new();
+            foreach (var ct in ChiTiet)
             {
-                SoPhieu = this.SoPhieu,
-                LoaiCT = this.LoaiCT,
-                IdKhach = this.IdKhach,
-                Ngay = this.Ngay,
-                Co = LoaiCT.StartsWith("C") ? this.SoTien : 0,
-                No = LoaiCT.StartsWith("T") ? this.SoTien : 0,
-                IdQuy = this.IdQuy,
-                DienGiai = this.DienGiai
-            };
+                lst.Add(new SoCai
+                {
+                    SoPhieu = this.SoPhieu,
+                    LoaiCT = this.LoaiCT,
+                    Ngay = this.Ngay,
+                    LoaiDTCo = LoaiCT.StartsWith("T") ? TuDien.DoiTuong.PhapNhan : ct.MaDoiTuong,
+                    LoaiDTNo = LoaiCT.StartsWith("T") ? ct.MaDoiTuong : TuDien.DoiTuong.PhapNhan,
+                    IdCo = LoaiCT.StartsWith("T") ? IdKhach : ct.IdQuy,
+                    IdNo = LoaiCT.StartsWith("T") ? ct.IdQuy : IdKhach,
+                    SoTien = ct.SoTien,
+                    DienGiai = ct.DienGiai
+                });
+            }
+            return lst;
         }
         public CTTienTe ToCTTienTe()
         {

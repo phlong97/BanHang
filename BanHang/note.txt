@@ -1,0 +1,7 @@
+Mã vạch
+Giá vốn
+Sổ cái, sổ kho lưu dộng hay tĩnh?
+Tuổi nợ
+
+giavon = ((SLTon * Giavoncu)+(SLN * GiaNhap) + ChiPhi)/(SLTon + SLN)
+
