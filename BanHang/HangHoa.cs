@@ -1,14 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime;
-using System.Runtime.CompilerServices;
-using System.Security.Cryptography.Xml;
-using System.Text;
-using System.Threading.Tasks;
-using System.Transactions;
-
-namespace BanHang
+﻿namespace BanHang
 {
     public static class DuLieuBanHang
     {
@@ -24,7 +14,7 @@ namespace BanHang
         public static List<NhanVien> DSNhanVien = new();
         public static List<string> ListToanTu = new() { "<", "<=", "=", ">", ">=" };
         public static List<TenTruongTruyVan> ListTenTruong = new();
-        public static List<GiaVon_BTV> BangGiaVon = new();
+        public static List<GiaVon> BangGiaVon = new();
         public static List<CTTienTeCloud> CTTienTe = new();
         public static List<QuyTienTe> DSQuyTT = new();
         public static List<Kho> DSKho = new();
@@ -42,7 +32,12 @@ namespace BanHang
             await Task.Run(() =>
             {
                 SoCaiTongHop.AddRange(DuLieuBanHang.DSDonHang.Select(x => x.ToSoCai()));
-                SoCaiTongHop.AddRange(DuLieuBanHang.CTTienTe.Select(x => x.ToSoCai()));
+                List<SoCai> sctc = new();
+                foreach (var item in DuLieuBanHang.CTTienTe)
+                {
+                    sctc.AddRange(item.ToSoCai());
+                }
+                SoCaiTongHop.AddRange(sctc);
             });
             SystemBusy = false;
         }
@@ -51,8 +46,10 @@ namespace BanHang
             List<TongHopCongNo> ttcnnm = new();
             Parallel.ForEach(DSKhachHang.Where(x => x.LoaiKhach == LoaiKhach).OrderBy(x => x.TenKhach), kh =>
             {
-                var ct = SoCaiTongHop.Where(x => x.IdKhach.Equals(kh.Id) && x.Ngay < DenNgay);
-                var cndk = kh.CongNoDauNam() + ct.Where(x => x.Ngay < TuNgay).Sum(x => x.No - x.Co);
+                var ctno = SoCaiTongHop.Where(x => x.IdNo.Equals(kh.Id) && x.Ngay < DenNgay);
+                var ctco = SoCaiTongHop.Where(x => x.IdCo.Equals(kh.Id) && x.Ngay < DenNgay);
+                var cndk = kh.CongNoDauNam() + ctno.Where(x => x.Ngay < TuNgay).Sum(x => x.SoTien) -
+                ctco.Where(x => x.Ngay < TuNgay).Sum(x => x.SoTien);
                 lock (ttcnnm)
                     ttcnnm.Add(new TongHopCongNo
                     {
@@ -60,8 +57,8 @@ namespace BanHang
                         TenKH = kh.TenKhach,
                         DKNo = Math.Max(cndk, 0),
                         DKCo = Math.Max(-cndk, 0),
-                        PSNo = ct.Where(x => x.Ngay >= TuNgay).Sum(x => x.No),
-                        PSCo = ct.Where(x => x.Ngay >= TuNgay).Sum(x => x.Co)
+                        PSNo = ctno.Where(x => x.Ngay >= TuNgay).Sum(x => x.SoTien),
+                        PSCo = ctco.Where(x => x.Ngay >= TuNgay).Sum(x => x.SoTien)
                     });
             });
             return ttcnnm;
@@ -102,17 +99,17 @@ namespace BanHang
             List<TongHopTonQuy> thtq = new();
             Parallel.ForEach(DSQuyTT.Where(x => string.IsNullOrEmpty(LoaiQuy) ? true : x.LoaiQuy.Equals(LoaiQuy)), quy =>
             {
-                var ct = SoCaiTongHop.Where(x => x.IdQuy.Equals(quy.Id) && x.Ngay < DenNgay);
-
+                var ctno = SoCaiTongHop.Where(x => x.IdNo.Equals(quy.Id) && x.Ngay < DenNgay);
+                var ctco = SoCaiTongHop.Where(x => x.IdCo.Equals(quy.Id) && x.Ngay < DenNgay);
                 lock (thtq)
                     thtq.Add(new TongHopTonQuy
                     {
                         IdQuy = quy.Id,
                         MaQuy = quy.Ma,
                         TenQuy = quy.Ten,
-                        TonDauKy = ct.Where(x => x.Ngay < TuNgay).Sum(x => x.No - x.Co),
-                        TongThu = ct.Where(x => x.Ngay >= TuNgay).Sum(x => x.No),
-                        TongChi = ct.Where(x => x.Ngay >= TuNgay).Sum(x => x.Co)
+                        TonDauKy = ctno.Where(x => x.Ngay < TuNgay).Sum(x => x.SoTien) - ctco.Where(x => x.Ngay < TuNgay).Sum(x => x.SoTien),
+                        TongThu = ctno.Where(x => x.Ngay >= TuNgay).Sum(x => x.SoTien),
+                        TongChi = ctco.Where(x => x.Ngay >= TuNgay).Sum(x => x.SoTien)
                     });
             });
 
@@ -237,6 +234,7 @@ namespace BanHang
         public string LoaiDTCo { get; set; }
         public string IdCo { get; set; }
         public double SoTien { get; set; }
+        public string MaQuanLy { get; set; }
 
         //Xuat ban:
         //- Doanh Thu: Idno ; khach ; idco: ma doanh thu
@@ -315,18 +313,18 @@ namespace BanHang
     }
 
 
-    public class GiaVon_BTV
+    public class GiaVon
     {
         public string IdHH { get; set; }
 
-        public Dictionary<int, double> GiaVon = new();
+        public Dictionary<int, double> ListGiaVon = new();
 
-        public double GetGiaVon(int thang) => GiaVon.ContainsKey(thang) ? GiaVon[thang] : 0;
+        public double GetGiaVon(int thang) => ListGiaVon.ContainsKey(thang) ? ListGiaVon[thang] : 0;
 
         public void SetGiaVon(int thang, double giaVon)
         {
-            if (GiaVon.ContainsKey(thang)) GiaVon[thang] = giaVon;
-            else GiaVon.Add(thang, giaVon);
+            if (ListGiaVon.ContainsKey(thang)) ListGiaVon[thang] = giaVon;
+            else ListGiaVon.Add(thang, giaVon);
         }
 
         public DateTime NgayDauThang(int thang) => new DateTime(DateTime.Now.Year, thang, 1);
@@ -361,18 +359,18 @@ namespace BanHang
             }
         }
     }
-    public class GiaVon
-    {
-        public string Id { get; set; }
-        public double Gia { get; set; }
-        public double SoLuongTon { get; set; }
-        public DateTime NgayThayDoi { get; set; }
+    //public class GiaVon
+    //{
+    //    public string Id { get; set; }
+    //    public double Gia { get; set; }
+    //    public double SoLuongTon { get; set; }
+    //    public DateTime NgayThayDoi { get; set; }
 
-        public GiaVon MakeCopy()
-        {
-            return (GiaVon)this.MemberwiseClone();
-        }
-    }
+    //    public GiaVon MakeCopy()
+    //    {
+    //        return (GiaVon)this.MemberwiseClone();
+    //    }
+    //}
     public class HangHoa : ObjectExtends
     {
         public string Id { get; set; } = String.Empty;
@@ -492,15 +490,28 @@ namespace BanHang
         }
     }
 
-    public class BangGia : ObjectExtends
+    public class BangGiaApDung
+    {
+        public bool ApDungToanQuoc { get; set; } = true;
+        public List<string> DsRieng { get; set; } = new();
+        public BangGiaApDung MakeCopy()
+        {
+            BangGiaApDung ApDung = (BangGiaApDung)this.MemberwiseClone();
+
+            ApDung.DsRieng = this.DsRieng.ToList();
+
+            return ApDung;
+        }
+    }
+    public class BangGia
     {
         public string Id { get; set; } = String.Empty;
         public string Ten { get; set; } = String.Empty;
-        public bool ApDungToanQuoc { get => GetLogicField(TuDien.BG_ApDungToanQuoc); set => SetLogicField(TuDien.BG_ApDungToanQuoc, value); }
-        public List<string> DSChiNhanh { get; set; } = new();
+        public BangGiaApDung ChiNhanhApDung { get; set; }
+        public BangGiaApDung KHApDung { get; set; }
         public DateTime TuNgay { get; set; }
         public DateTime DenNgay { get; set; }
-        public List<HangHoaKhuyenMai> DSHangHoaKM { get; set; } = new();
+        public List<HangHoa> DSHangHoa { get; set; } = new();
         public bool ApDung { get; set; }
 
         public BangGiaCloud ToBangGiaCloud()
@@ -512,22 +523,38 @@ namespace BanHang
                 TuNgay = this.TuNgay,
                 DenNgay = this.DenNgay,
                 ApDung = this.ApDung,
-                DSChiNhanh = this.DSChiNhanh,
-                DSHangHoaKM = this.DSHangHoaKM.Select(x => x.ToHangHoaKhuyenMaiCloud()).ToList(),
+                ChiNhanhApDung = this.ChiNhanhApDung.MakeCopy(),
+                KHApDung = this.KHApDung.MakeCopy(),
+                DSHangHoa = this.DSHangHoa.Select(x => x.ToHangHoaCloud()).ToList(),
             };
-            bg.CopySource(this);
             return bg;
         }
     }
-    public class BangGiaCloud : ObjectExtends
+    public class BangGiaCloud
     {
         public string Id { get; set; } = String.Empty;
         public string Ten { get; set; } = String.Empty;
-        public List<string> DSChiNhanh { get; set; } = new();
+        public BangGiaApDung ChiNhanhApDung { get; set; }
+        public BangGiaApDung KHApDung { get; set; }
         public DateTime TuNgay { get; set; }
         public DateTime DenNgay { get; set; }
+        public List<HangHoaCloud> DSHangHoa { get; set; } = new();
         public bool ApDung { get; set; }
-        public List<HangHoaKhuyenMaiCloud> DSHangHoaKM { get; set; } = new();
+        public BangGia ToBangGia()
+        {
+            var bg = new BangGia()
+            {
+                Id = this.Id,
+                Ten = this.Ten,
+                TuNgay = this.TuNgay,
+                DenNgay = this.DenNgay,
+                ApDung = this.ApDung,
+                ChiNhanhApDung = this.ChiNhanhApDung.MakeCopy(),
+                KHApDung = this.KHApDung.MakeCopy(),
+                DSHangHoa = this.DSHangHoa.Select(x => x.ToHangHoa()).ToList(),
+            };
+            return bg;
+        }
 
     }
     public class HangHoaKhuyenMai
@@ -886,12 +913,12 @@ namespace BanHang
         {
             return new SoCai
             {
-                SoPhieu = this.SoPhieu,
-                LoaiCT = this.LoaiCT,
-                IdKhach = this.IdKhach,
-                Ngay = this.Ngay,
-                Co = this.TongTien,
-                DienGiai = ""
+                //SoPhieu = this.SoPhieu,
+                //LoaiCT = this.LoaiCT,
+                //IdKhach = this.IdKhach,
+                //Ngay = this.Ngay,
+                //Co = this.TongTien,
+                //DienGiai = ""
             };
         }
 
@@ -1026,12 +1053,12 @@ namespace BanHang
         {
             return new SoCai
             {
-                SoPhieu = this.SoPhieu,
-                LoaiCT = this.LoaiCT,
-                IdKhach = this.IdKhach,
-                Ngay = this.Ngay,
-                No = this.TongTien,
-                DienGiai = ""
+                //SoPhieu = this.SoPhieu,
+                //LoaiCT = this.LoaiCT,
+                //IdKhach = this.IdKhach,
+                //Ngay = this.Ngay,
+                //No = this.TongTien,
+                //DienGiai = ""
             };
         }
     }
@@ -1128,14 +1155,13 @@ namespace BanHang
                             Sum(x => x.SLNhap - x.SLXuat) + hanghoa.SoLuongTonKhoDauNam();
 
                         //Tĩnh: Lưu lên cloud
-                        lock (DuLieuBanHang.BangGiaVon)
-                            DuLieuBanHang.BangGiaVon.Add(new GiaVon
-                            {
-                                Id = hanghoa.Id,
-                                NgayThayDoi = this.Ngay,
-                                Gia = (GiaVonCu * SLTon + ct.SoLuong * ct.DonGia) / (SLTon + ct.SoLuong),
-                                SoLuongTon = SLTon + ct.SoLuong
-                            });
+                        //lock (DuLieuBanHang.BangGiaVon)
+                        //    DuLieuBanHang.BangGiaVon.Add(new GiaVon_BTV
+                        //    {
+                        //        IdHH = hanghoa.Id,                                
+                        //        Gia = (GiaVonCu * SLTon + ct.SoLuong * ct.DonGia) / (SLTon + ct.SoLuong),
+                        //        SoLuongTon = SLTon + ct.SoLuong
+                        //    });
                     }
                 });
             }
@@ -1144,13 +1170,13 @@ namespace BanHang
         {
             return new SoCai
             {
-                SoPhieu = this.SoPhieu,
-                LoaiCT = this.LoaiCT,
-                Ngay = this.Ngay,
-                IdKhach = this.IdKhach,
-                No = LoaiCT.StartsWith("N") ? this.TongTien : 0,
-                Co = LoaiCT.StartsWith("X") ? this.TongTien : 0,
-                DienGiai = this.GhiChu
+                //SoPhieu = this.SoPhieu,
+                //LoaiCT = this.LoaiCT,
+                //Ngay = this.Ngay,
+                //IdKhach = this.IdKhach,
+                //No = LoaiCT.StartsWith("N") ? this.TongTien : 0,
+                //Co = LoaiCT.StartsWith("X") ? this.TongTien : 0,
+                //DienGiai = this.GhiChu
             };
         }
         public async Task UpdateToCloud()
@@ -1213,8 +1239,8 @@ namespace BanHang
         public string Ma { get; set; }
         public string Ten { get; set; }
         /// <summary>
-        /// 0: Tien Mat
-        /// 1: Tien Gui
+        ///  Tien Mat
+        ///  Tien Gui
         /// </summary>
         public string LoaiQuy { get; set; }
         public string ThongTinQuy { get; set; }
@@ -1226,6 +1252,10 @@ namespace BanHang
         public string MaDoiTuong { get; set; }
         public string DienGiai { get; set; }
         public double SoTien { get; set; }
+        public CTThuChi MakeCopy()
+        {
+            return (CTThuChi)this.MemberwiseClone();
+        }
     }
     public class CTTienTe
     {
@@ -1248,22 +1278,9 @@ namespace BanHang
         }
         public string TenKhach { get; set; }
         public string DiaChi { get; set; }
-        public string DienGiai { get; set; }
-        public double SoTien { get; set; }
-        private string _IdQuy;
-        public string IdQuy
-        {
-            get => _IdQuy;
-            set
-            {
-                _IdQuy = value;
-                var quy = DuLieuBanHang.DSQuyTT.FirstOrDefault(x => x.Id.Equals(_IdQuy));
-                TenQuy = quy == null ? string.Empty : quy.Ten;
-            }
-        }
-        public string TenQuy { get; set; }
+        public List<CTThuChi> ChiTiet { get; set; }
         public string IdUser { get; set; }
-        public CTTienTeCloud ToCTTienTeuCloud()
+        public CTTienTeCloud ToCTTienTe()
         {
             CTTienTeCloud p = new CTTienTeCloud
             {
@@ -1273,9 +1290,7 @@ namespace BanHang
                 LoaiCT = this.LoaiCT,
                 IdCT = this.IdCT,
                 Ngay = this.Ngay,
-                DienGiai = this.DienGiai,
-                IdQuy = this.IdQuy,
-                SoTien = this.SoTien,
+                ChiTiet = this.ChiTiet.Select(x => x.MakeCopy()).ToList(),
                 IdUser = this.IdUser
             };
             return p;
@@ -1328,17 +1343,16 @@ namespace BanHang
                 LoaiCT = this.LoaiCT,
                 IdCT = this.IdCT,
                 Ngay = this.Ngay,
-                DienGiai = this.DienGiai,
-                IdQuy = this.IdQuy,
-                SoTien = this.SoTien,
-                IdUser = this.IdUser,
-
+                ChiTiet = this.ChiTiet.Select(x => x.MakeCopy()).ToList(),
+                IdUser = this.IdUser
             };
             return p;
         }
         public CTTienTeCloud MakeCopy()
         {
-            return (CTTienTeCloud)this.MemberwiseClone();
+            CTTienTeCloud tc = (CTTienTeCloud)this.MemberwiseClone();
+            tc.ChiTiet = this.ChiTiet.Select(x => x.MakeCopy()).ToList();
+            return tc;
         }
         public async Task UpdateToCloud()
         {
