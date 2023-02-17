@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
 
@@ -100,7 +101,7 @@ namespace Ban_Hang
                     MaHH = $"MaHH_HH{(i + 1).ToString("D5")}",
                     TenHH = $"Hàng hóa {i + 1}",
                     IdNhom = $"ID_NH{random.Next(0, 50).ToString("D4")}",
-                    Dvt = Dvt.Split(",")[random.Next(0, 10)],
+                    Dvt = Dvt.Split(',')[random.Next(0, 10)],
                     LaHangBan = random.NextDouble() > 0.5,
                     NgungKinhDoanh = false,
                     TonMin = 1,
@@ -186,7 +187,7 @@ namespace Ban_Hang
                     TenHH = $"Hàng hóa {i + 1}",
                     MaLoai = $"MA_LOAI{i.ToString("D5")}",
                     IdNhom = $"ID_NH{random.Next(0, 50).ToString("D4")}",
-                    Dvt = Dvt.Split(",")[random.Next(0, 10)],
+                    Dvt = Dvt.Split(',')[random.Next(0, 10)],
                     LaHangBan = random.NextDouble() > 0.5,
                     NgungKinhDoanh = false,
                     TonMin = 1,
@@ -224,7 +225,7 @@ namespace Ban_Hang
 
             //Tạo danh mục quỹ
             List<QuyTienTe> DsQuy = new();
-            string[] dsloaiquy = "TM,TG".Split(",");
+            string[] dsloaiquy = "TM,TG".Split(',');
             for (int i = 1; i <= 10; i++)
             {
                 DsQuy.Add(new QuyTienTe
@@ -239,7 +240,7 @@ namespace Ban_Hang
 
             //Tạo đơn hàng
             List<DonHangCloud> DsDonHang = new();
-            string[] dsloaict = "X1,X2,N1,N2".Split(",");
+            string[] dsloaict = "X1,X2,N1,N2".Split(',');
             for (int i = 0; i < 10; i++)
             {
                 var dh = new DonHangCloud()
@@ -277,7 +278,7 @@ namespace Ban_Hang
 
             //Tạo phiếu thu chi
             List<CTTienTeCloud> DsPhieuTC = new();
-            string[] dsloaip = "T1,C1".Split(",");
+            string[] dsloaip = "T1,C1".Split(',');
             for (int i = 0; i < 10; i++)
             {
                 var p = new CTTienTeCloud()

@@ -9,7 +9,7 @@ namespace Ban_Hang
 
     public static class DuLieuBanHang
     {
-        static FireBaseDB fb = new FireBaseDB(TuDien.FIREBASE_URL, TuDien.FIREBASE_SECRET);
+        static readonly FireBaseDB fb = new FireBaseDB(TuDien.FIREBASE_URL, TuDien.FIREBASE_SECRET);
         static bool _InternetOff;
         public static bool InternetOff
         {
@@ -79,12 +79,12 @@ namespace Ban_Hang
                 Type type = typeof(T);
                 var coll = db.GetCollection<T>(type.Name);
                 var query = coll.Query();
-                var Ds = query.Where(x => !x.Sync).ToList();
+                var Ds = query.Where(x => x.Sync == null || (bool)x.Sync == false).ToList();
                 if (Ds.Count == 0)
                     return false;
                 Parallel.ForEach(Ds, async item =>
                 {
-                    item.Key = MiliHelper.CreateKey();
+                    item.Id = MiliHelper.CreateKey();
                     item.Sync = true;
                     await fb.UpdateToFirebase(type.Name, item);
                 });
@@ -96,7 +96,7 @@ namespace Ban_Hang
         public static bool SystemBusy = false;
         public static List<SoCai> SoCaiTongHop = new();
         public static List<TheKho> SoKhoTongHop = new();
-        public static List<NhomHang> DSNhomHang = new();
+        public static List<NhomHangCloud> DSNhomHang = new();
         public static List<HangHoaCloud> DSHangHoa = new();
         public static List<BangGia> DSBangGia = new();
         public static List<NhomKhach> DSNhomKhach = new();
@@ -366,11 +366,52 @@ namespace Ban_Hang
         public string MaNV { get; set; } = string.Empty;
         public string TenNV { get; set; } = string.Empty;
     }
-    public class NhomHang : MiliObject
+    public class NhomHang : ObjectExtends
     {
-        public string Id { get; set; } = string.Empty;
         public string TenNhom { get; set; } = string.Empty;
-        public string IdNhomCha { get; set; } = string.Empty;
+
+        private string _IdNhomCha;
+
+        public string IdNhomCha
+        {
+            get { return _IdNhomCha; }
+            set 
+            { 
+                _IdNhomCha = value;
+                var nh = DuLieuBanHang.DSNhomHang.FirstOrDefault(x => x.Id.Equals(_IdNhomCha));
+                TenNhomCha = nh == null ? string.Empty : nh.TenNhom;
+            }
+        }
+        public string TenNhomCha { get; set; }
+        public NhomHangCloud ToNhomHangCloud()
+        {
+            var nh = new NhomHangCloud()
+            {
+                Id = this.Id,
+                TenNhom = this.TenNhom,
+                IdNhomCha = this.IdNhomCha
+            };
+            nh.CopySource(this);
+            return nh;
+        }
+
+    }
+    public class NhomHangCloud : ObjectExtends
+    {
+        public string TenNhom { get; set; } = string.Empty;
+
+        public string IdNhomCha { get; set; }
+        public NhomHang ToNhomHang()
+        {
+            var nh = new NhomHang()
+            {
+                Id = this.Id,
+                TenNhom = this.TenNhom,
+                IdNhomCha = this.IdNhomCha
+            };
+            nh.CopySource(this);
+            return nh;
+        }
 
     }
 
@@ -548,9 +589,9 @@ namespace Ban_Hang
         }
         public double LayGiaVon(string IdHH, DateTime Ngay)
         {
-            var GiaVon = DuLieuBanHang.BangGiaVon.Where(x => x.IdHH.Equals(IdHH) && x.NgayThayDoi <= Ngay)
-                .OrderBy(x => x.NgayThayDoi).LastOrDefault();
-            return GiaVon == null ? 0 : GiaVon.Gia;
+            var GiaVon = DuLieuBanHang.BangGiaVon.FirstOrDefault(x => x.IdHH.Equals(IdHH));
+                
+            return GiaVon == null ? 0 : GiaVon.DGV;
         }
         public double GiaTriTonKhoDauNam(string? idKho = null, int nam = 0)
         {
@@ -625,9 +666,8 @@ namespace Ban_Hang
             return ApDung;
         }
     }
-    public class BangGia
+    public class BangGia : ObjectExtends
     {
-        public string Id { get; set; } = String.Empty;
         public string Ten { get; set; } = String.Empty;
         public BangGiaApDung ChiNhanhApDung { get; set; }
         public BangGiaApDung KHApDung { get; set; }
@@ -652,7 +692,7 @@ namespace Ban_Hang
             return bg;
         }
     }
-    public class BangGiaCloud : MiliObject
+    public class BangGiaCloud : ObjectExtends
     {
         public string Ten { get; set; } = String.Empty;
         public BangGiaApDung ChiNhanhApDung { get; set; }
@@ -678,7 +718,7 @@ namespace Ban_Hang
         }
 
     }
-    public class HangHoaKhuyenMai
+    public class HangHoaKhuyenMai : ObjectExtends
     {
         private string _IdHH = String.Empty;
         public string IdHH
@@ -713,7 +753,7 @@ namespace Ban_Hang
         }
 
     }
-    public class HangHoaKhuyenMaiCloud
+    public class HangHoaKhuyenMaiCloud : ObjectExtends
     {
         public string IdHH { get; set; } = String.Empty;
         public float GiaVon { get; set; }
@@ -750,7 +790,7 @@ namespace Ban_Hang
         public string ToanTu { get; set; } = String.Empty;
         public float GiaTri { get; set; }
     }
-    public class NhomKhach : MiliObject
+    public class NhomKhach : ObjectExtends
     {
         public string TenNhom { get; set; } = String.Empty;
         public float GiamGia { get; set; }
@@ -1623,9 +1663,6 @@ namespace Ban_Hang
         //{
 
         //}
-
-
-
         //public Task DeleteFromCloud()
         //{
         //    HuyBoCongNo();
@@ -1636,18 +1673,6 @@ namespace Ban_Hang
         {
             //Cần xóa trên Cloud            
         }
-    }
-
-    public class DanhMucPhuongThuc
-    {
-        public string LoaiCT { get; set; }
-        public string Ten { get; set; }
-        /// <summary>
-        /// 0: Khong theo doi CP
-        /// 1: Co theo doi CP
-        /// </summary>
-        public int LaDTCP { get; set; }
-        public bool CoSuDung { get; set; }
     }
 
     //DonHangBan:

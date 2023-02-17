@@ -1,55 +1,79 @@
 ﻿using LiteDB;
 using System;
+using System.Collections.Generic;
 
 namespace Ban_Hang
 {
     public class MiliObject
     {
-        public string Key { get; set; }
         [BsonId]
         public string Id { get; set; }
-        public bool Del { get; set; }
-        public bool Sync { get; set; } // false: Da sua chua luu len firebase (Update)
+        public string Udm { get; set; }
+        public bool? Del { get; set; }
+        public bool? Sync { get; set; } // false: Da sua chua luu len firebase (Update)
     }
-    public static class MiliHelper
+    public class ObjectExtends : MiliObject
     {
-        public static string CreateKey()
+        public Dictionary<string, string> tf { get; set; } = new();
+        public Dictionary<string, DateTime> df { get; set; } = new();
+        public Dictionary<string, double> nf { get; set; } = new();
+        public Dictionary<string, bool> lf { get; set; } = new();
+
+        public string GetTextField(string key, string defaultValue = "")
         {
-            return ObjectId.NewObjectId().ToString();
+            return tf.ContainsKey(key) ? tf[key] : defaultValue;
         }
-        public static DateTime LayNgayTao(string key)
+
+        public void SetTextField(string key, string value)
         {
-            var ObjId = new ObjectId(key);
-            return ObjId.CreationTime.ToUniversalTime();
+            if (tf.ContainsKey(key)) tf[key] = value;
+            else tf.Add(key, value);
+        }
+
+        public DateTime GetDateField(string key, DateTime defaultValue = default(DateTime))
+        {
+            return df.ContainsKey(key) ? df[key] : defaultValue;
+        }
+
+        public void SetDateField(string key, DateTime value)
+        {
+            if (df.ContainsKey(key)) df[key] = value;
+            else df.Add(key, value);
+        }
+
+        public double GetNumberField(string key, double defaultValue = 0)
+        {
+            return nf.ContainsKey(key) ? nf[key] : defaultValue;
+        }
+
+        public void SetNumberField(string key, double value)
+        {
+            if (nf.ContainsKey(key)) nf[key] = value;
+            else nf.Add(key, value);
+        }
+        public bool GetLogicField(string key, bool defaultValue = false)
+        {
+            return lf.ContainsKey(key) ? lf[key] : defaultValue;
+        }
+
+        public void SetLogicField(string key, bool value)
+        {
+            if (lf.ContainsKey(key)) lf[key] = value;
+            else lf.Add(key, value);
+        }
+
+        public void CopySource(ObjectExtends source)
+        {
+            Id= source.Id;
+            Sync = source.Sync;
+            Del= source.Del;
+            Udm= source.Udm;
+            tf = new Dictionary<string, string>(source.tf);
+            nf = new Dictionary<string, double>(source.nf);
+            df = new Dictionary<string, DateTime>(source.df);
+            lf = new Dictionary<string, bool>(source.lf);
         }
     }
-    public class FirebaseDataNode : MiliObject
-    {
-        public string Id { get; set; } = string.Empty;
-        public string Key { get; set; } = string.Empty;
-        public bool Deleted { get; set; } = false;
-        public string KeyName { get; set; } = string.Empty;
-        public string ModelName { get; set; } = string.Empty;
-        public string ChildPath { get; set; } = string.Empty;
-        public string LocalFileName { get; set; } = string.Empty;
-        public string CurrentValue { get; set; } = string.Empty;
-        public bool DataOpened { get; set; } = false;
-        public bool LocalStorage { get; set; }
-        public bool DataChanged { get; set; }
-        public string LocalLastKey { get; set; } = string.Empty;
-        public string LastKey { get; set; } = "0";
-    }
-    //public static List<FirebaseDataNode> ListDataNode = new List<FirebaseDataNode>()
-    //    {
-
-    //        new FirebaseDataNode { KeyName = TuDien.CollectionName.UserNode, ModelName="UserCloudModel", ChildPath = "User", LocalFileName = offlineStorageLocation + "\\User.uvf" },
-    //        new FirebaseDataNode { KeyName = TuDien.CollectionName.HangHoaNode, ModelName="HangHoaCloudModel",  ChildPath = "HangHoa", LocalFileName = offlineStorageLocation + "\\HangHoa.uvf" },
-    //        new FirebaseDataNode { KeyName = TuDien.CollectionName.KhachHangNode, ModelName="KhachHangCloudModel", ChildPath = "KhachHang", LocalFileName = offlineStorageLocation + "\\KhachHang.uvf" },
-    //        new FirebaseDataNode { KeyName = TuDien.CollectionName.NhomHangNode, ModelName="NhomHangCloudModel", ChildPath = "NhomHang", LocalFileName = offlineStorageLocation + "\\NhomHang.uvf" },
-    //        new FirebaseDataNode { KeyName = TuDien.CollectionName.NhomKhachNode, ModelName="NhomKhachCloudModel", ChildPath = "NhomKhach", LocalFileName = offlineStorageLocation + "\\NhomKhach.uvf" },
-    //        new FirebaseDataNode { KeyName = TuDien.CollectionName.ChucNangNode, ModelName="ChucNangCloudModel", ChildPath = "Public/ChucNang", LocalFileName = offlineStorageLocation + "\\ChucNang.uvf" },
-    //        new FirebaseDataNode { KeyName = TuDien.CollectionName.DonHangNode, ModelName="DonHangCloudModel", ChildPath = "DonHang", LocalFileName = offlineStorageLocation + "\\DonHang.uvf" },
-
-
-    //    };
+    
+    
 }

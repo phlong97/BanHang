@@ -20,13 +20,13 @@ namespace Ban_Hang
         }
         public async Task UpdateToFirebase<T>(string child, T data) where T : MiliObject
         {
-            if (!string.IsNullOrEmpty(data.Key))
+            if (!string.IsNullOrEmpty(data.Id))
             {
-                await Client.Child(child).Child(data.Key).DeleteAsync();
+                await Client.Child(child).Child(data.Id).DeleteAsync();
             }
-            data.Key = MiliHelper.CreateKey();
+            data.Id = MiliHelper.CreateKey();
             data.Sync = true;
-            await Client.Child(child).Child(data.Key).PutAsync(data);
+            await Client.Child(child).Child(data.Id).PutAsync(data);
             //Luu key vao lang nghe
             //SaveToObserv(data.Key);
         }

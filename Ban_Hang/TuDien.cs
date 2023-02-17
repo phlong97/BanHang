@@ -13,7 +13,7 @@ namespace Ban_Hang
         public static class ColName
         {
             public const string HangHoa = "HangHoaCloud", NhanVien = "NhanVien", KhachHang = "KhachHang",
-                BangGia = "BangGiaCloud", NhomHang = "NhomHang", CTTTe = "CTTTeCloud", QuyTienTe = "QuyTienTe",
+                BangGia = "BangGiaCloud", NhomHang = "NhomHangCloud", CTTTe = "CTTTeCloud", QuyTienTe = "QuyTienTe",
                 Kho = "Kho", DonHang = "DonHangCloud", TheKho = "TheKhoCloud", NhomKhach = "NhomKhach";
         }
         public static class DonHang
