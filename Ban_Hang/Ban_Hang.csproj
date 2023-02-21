@@ -103,6 +103,7 @@
       <DependentUpon>DanhMuc_HangHoa.cs</DependentUpon>
     </Compile>
     <Compile Include="DuLieuBanHang.cs" />
+    <Compile Include="_LiteDb.cs" />
     <Compile Include="_MiliObject.cs" />
     <EmbeddedResource Include="DanhMuc_HangHoa.resx">
       <DependentUpon>DanhMuc_HangHoa.cs</DependentUpon>

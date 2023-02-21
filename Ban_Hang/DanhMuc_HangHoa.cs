@@ -5,6 +5,7 @@ using DevExpress.XtraEditors.Repository;
 using DevExpress.XtraGrid;
 using DevExpress.XtraGrid.Columns;
 using DevExpress.XtraGrid.Views.Base;
+using DevExpress.XtraGrid.Views.Card;
 using DevExpress.XtraGrid.Views.Grid;
 using DevExpress.XtraRichEdit.Commands;
 using System;
@@ -50,8 +51,8 @@ namespace Ban_Hang
             gridView.Columns.Add(MiliHelper.NewGridCloumn("Giá bán", "GiaBan", 25, "N"));
             gridView.Columns.Add(MiliHelper.NewGridCloumn("Mô tả", "MoTa",50));
 
-            //gridView.CustomUnboundColumnData -= gridView_CustomUnboundColumnData;
-            //gridView.CustomUnboundColumnData += gridView_CustomUnboundColumnData;
+            gridView.CustomUnboundColumnData -= gridView_CustomUnboundColumnData;
+            gridView.CustomUnboundColumnData += gridView_CustomUnboundColumnData;
 
         }
         void AssignPictureEdittoImageColumn(GridColumn column)
@@ -66,48 +67,32 @@ namespace Ban_Hang
             // Assign the PictureEdit to the 'Image' column.
             column.ColumnEdit = riPictureEdit;
         }
-        Dictionary<string, Image> imageCache = new Dictionary<string, Image>(StringComparer.OrdinalIgnoreCase);
-
-        void gridView_CustomUnboundColumnData(object sender, CustomColumnDataEventArgs e)
+        Dictionary<string, Image> imageCache = new Dictionary<string, Image>();
+        private void gridView_CustomUnboundColumnData(object sender, CustomColumnDataEventArgs e)
         {
-            if (e.Column.FieldName == "HinhAnh" && e.IsGetData)
+            if (e.IsSetData)
+                return;
+            CardView view = sender as CardView;
+            var path = (string)view.GetListSourceRowCellValue(e.ListSourceRowIndex, "HinhAnh");
+            if (string.IsNullOrEmpty(path))
+                return;
+            try
             {
-                GridView view = sender as GridView;
-                string fileName = view.GetRowCellValue(view.GetRowHandle(e.ListSourceRowIndex), "ImagePath") as string ?? string.Empty;
-                if (!imageCache.ContainsKey(fileName))
-                {
-                    Image img = GetImage(fileName);
-                    imageCache.Add(fileName, img);
-                }
-                e.Value = imageCache[fileName];
+                e.Value = LoadImage(path);
             }
+            catch { }
         }
 
-        Image GetImage(string path)
+        Image LoadImage(string path)
         {
-            // Load an image by its local path, URL, etc.
-            // The following code loads the image from te specified file.
-            Image img = null;
-            if (File.Exists(path))
-                img = Image.FromFile(path);
-            else
-                img = Image.FromFile(Path.Combine(Environment.CurrentDirectory, "imgs", "no_img.jpg"));
+            Image img;
+            if (!imageCache.TryGetValue(path, out img))
+            {
+                if (File.Exists(path))
+                    img = Image.FromFile(path);
+                imageCache.Add(path, img);
+            }
             return img;
-        }
-
-        private void gridView_CustomUnboundColumnData_1(object sender, CustomColumnDataEventArgs e)
-        {
-            if (e.Column.FieldName == "HinhAnh" && e.IsGetData)
-            {
-                GridView view = sender as GridView;
-                string fileName = view.GetRowCellValue(view.GetRowHandle(e.ListSourceRowIndex), "ImagePath") as string ?? string.Empty;
-                if (!imageCache.ContainsKey(fileName))
-                {
-                    Image img = GetImage(fileName);
-                    imageCache.Add(fileName, img);
-                }
-                e.Value = imageCache[fileName];
-            }
         }
     }  
     
