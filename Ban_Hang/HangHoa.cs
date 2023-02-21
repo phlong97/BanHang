@@ -1,231 +1,21 @@
 ﻿using LiteDB;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace Ban_Hang
 {
 
-    public static class DuLieuBanHang
+    
+
+    public class User : objExtObject
     {
-        static readonly FireBaseDB fb = new FireBaseDB(TuDien.FIREBASE_URL, TuDien.FIREBASE_SECRET);
-        static bool _InternetOff;
-        public static bool InternetOff
-        {
-            get => _InternetOff;
-            set
-            {
-                if (value && _InternetOff == false)
-                {
-                    _InternetOff = value;
-                    //
-                    Parallel.ForEach(TuDien.dsCollection, coll =>
-                    {
-                        switch (coll)
-                        {
-                            case TuDien.ColName.KhachHang:
-                                PushToFirebase<KhachHang>();
-                                break;
-                            case TuDien.ColName.DonHang:
-                                PushToFirebase<DonHangCloud>();
-                                break;
-                            case TuDien.ColName.TheKho:
-                                PushToFirebase<TheKhoCloud>();
-                                break;
-                            case TuDien.ColName.CTTTe:
-                                PushToFirebase<CTTienTeCloud>();
-                                break;
-                            case TuDien.ColName.QuyTienTe:
-                                PushToFirebase<QuyTienTe>();
-                                break;
-                            case TuDien.ColName.HangHoa:
-                                PushToFirebase<HangHoaCloud>();
-                                break;
-                            case TuDien.ColName.BangGia:
-                                PushToFirebase<BangGiaCloud>();
-                                break;
-                            case TuDien.ColName.NhomHang:
-                                PushToFirebase<NhomHang>();
-                                break;
-                            case TuDien.ColName.NhomKhach:
-                                PushToFirebase<NhomKhach>();
-                                break;
-                            case TuDien.ColName.Kho:
-                                PushToFirebase<Kho>();
-                                break;
-                            case TuDien.ColName.NhanVien:
-                                PushToFirebase<NhanVien>();
-                                break;
-                            default:
-                                break;
-                        }
-                    });
-                }
-
-            }
-        }
-        public static bool PushToFirebase<T>() where T : MiliObject
-        {
-            //B1: Ktra co internet hay khong? Khong co => return; Neu co sang B2
-            //B2: Lay tat ca cac ban ghi co key trong hoac del = true
-            //B3: Duyet tran ds vua lay 
-            // Key khac trong => xoa tren firebase
-            //B4: Ghi ban ghi hien tai len firebase theo key moi
-            if (DuLieuBanHang.InternetOff)
-                return false;
-            using (var db = new LiteDatabase(TuDien.LITEDB_LOCAL_PATH))
-            {
-                Type type = typeof(T);
-                var coll = db.GetCollection<T>(type.Name);
-                var query = coll.Query();
-                var Ds = query.Where(x => x.Sync == null || (bool)x.Sync == false).ToList();
-                if (Ds.Count == 0)
-                    return false;
-                Parallel.ForEach(Ds, async item =>
-                {
-                    item.Id = MiliHelper.CreateKey();
-                    item.Sync = true;
-                    await fb.UpdateToFirebase(type.Name, item);
-                });
-                return true;
-            }
-
-        }
-        public static bool DaLapSo = false;
-        public static bool SystemBusy = false;
-        public static List<SoCai> SoCaiTongHop = new();
-        public static List<TheKho> SoKhoTongHop = new();
-        public static List<NhomHangCloud> DSNhomHang = new();
-        public static List<HangHoaCloud> DSHangHoa = new();
-        public static List<BangGia> DSBangGia = new();
-        public static List<NhomKhach> DSNhomKhach = new();
-        public static List<KhachHang> DSKhachHang = new();
-        public static List<NhanVien> DSNhanVien = new();
-        public static List<string> ListToanTu = new() { "<", "<=", "=", ">", ">=" };
-        public static List<TenTruongTruyVan> ListTenTruong = new();
-        public static List<GiaVon> BangGiaVon = new();
-        public static List<CTTienTeCloud> CTTienTe = new();
-        public static List<QuyTienTe> DSQuyTT = new();
-        public static List<Kho> DSKho = new();
-        public static List<DonHangCloud> DSDonHang = new();
-        public static User user = new();
-        //public static void TinhLaiGiaVon()
-        //{
-        //    Parallel.ForEach(DSHangHoa, hh =>
-        //    {
-        //        var Gvon = new GiaVon(hh);
-        //        Gvon.TinhGiaVon();
-        //    });
-        //}
-
-
-        //public static double LayGiaVon(string IdHH, int thang)
-        //{
-        //    return BangGiaVon.FirstOrDefault(x => x.IdHH.Equals(IdHH))?.GetGiaVon(thang) ?? 0;
-        //}
-        public static async Task TaoSoCai()
-        {
-            if (SystemBusy) return;
-            SystemBusy = true;
-            await Task.Run(() =>
-            {
-                //SoCaiTongHop.AddRange(DuLieuBan_Hang.DSDonHang.Select(x => x.ToSoCai()));
-                List<SoCai> sctc = new();
-                foreach (var item in DuLieuBanHang.CTTienTe)
-                {
-                    sctc.AddRange(item.ToSoCai());
-                }
-                SoCaiTongHop.AddRange(sctc);
-            });
-            SystemBusy = false;
-        }
-        public static List<TongHopCongNo> THCongNo(DateTime TuNgay, DateTime DenNgay, int LoaiKhach)
-        {
-            List<TongHopCongNo> ttcnnm = new();
-            Parallel.ForEach(DSKhachHang.Where(x => x.LoaiKhach == LoaiKhach).OrderBy(x => x.TenKhach), kh =>
-            {
-                var ctno = SoCaiTongHop.Where(x => x.IdNo.Equals(kh.Id) && x.Ngay < DenNgay);
-                var ctco = SoCaiTongHop.Where(x => x.IdCo.Equals(kh.Id) && x.Ngay < DenNgay);
-                var cndk = kh.CongNoDauNam() + ctno.Where(x => x.Ngay < TuNgay).Sum(x => x.SoTien) -
-                ctco.Where(x => x.Ngay < TuNgay).Sum(x => x.SoTien);
-                lock (ttcnnm)
-                    ttcnnm.Add(new TongHopCongNo
-                    {
-                        MaKH = kh.MaKH,
-                        TenKH = kh.TenKhach,
-                        DKNo = Math.Max(cndk, 0),
-                        DKCo = Math.Max(-cndk, 0),
-                        PSNo = ctno.Where(x => x.Ngay >= TuNgay).Sum(x => x.SoTien),
-                        PSCo = ctco.Where(x => x.Ngay >= TuNgay).Sum(x => x.SoTien)
-                    });
-            });
-            return ttcnnm;
-        }
-        public static List<TongHopTonKho> THTonKho(DateTime TuNgay, DateTime DenNgay, string IdKho = null)
-        {
-            List<TongHopTonKho> thtk = new();
-
-            Parallel.ForEach(DSHangHoa, hhc =>
-            {
-
-                var dstk = SoKhoTongHop.Where(x => x.Ngay <= DenNgay && x.IdHH.Equals(hhc.Id));
-                var hh = hhc.ToHangHoa();
-                lock (thtk) thtk.Add(new TongHopTonKho
-                {
-                    IdHH = hh.Id,
-                    MaHH = hh.MaHH,
-                    TenHH = hh.TenHH,
-                    DVT = hh.Dvt,
-                    SLDK = hh.SoLuongTonKhoDauNam(IdKho) + dstk.Where(x => x.Ngay < TuNgay).Sum(x => (IdKho == null || x.IdKhoNhap.Equals(IdKho) ? 1 : 0) *
-                    x.SLNhap - (IdKho == null || x.IdKhoXuat.Equals(IdKho) ? 1 : 0) * x.SLXuat),
-                    GTDK = hh.GiaTriTonKhoDauNam(IdKho) + dstk.Where(x => x.Ngay < TuNgay).Sum(x => (IdKho == null || x.IdKhoNhap.Equals(IdKho) ? 1 : 0) *
-                    x.SLNhap * x.DonGiaVon - (IdKho == null || x.IdKhoXuat.Equals(IdKho) ? 1 : 0) * x.SLXuat * x.DonGiaVon),
-                    SLNhap = dstk.Where(x => x.Ngay >= TuNgay).Sum(x => (IdKho == null || x.IdKhoNhap.Equals(IdKho) ? 1 : 0) * x.SLNhap -
-                    (IdKho == null || x.IdKhoXuat.Equals(IdKho) ? 1 : 0) * x.SLXuat),
-                    GTNhap = dstk.Where(x => x.Ngay >= TuNgay).Sum(x => (IdKho == null || x.IdKhoNhap.Equals(IdKho) ? 1 : 0) *
-                    x.SLNhap * x.DonGiaVon - (IdKho == null || x.IdKhoXuat.Equals(IdKho) ? 1 : 0) * x.SLXuat * x.DonGiaVon),
-                    SLXuat = dstk.Where(x => x.Ngay >= TuNgay).Sum(x => (IdKho == null || x.IdKhoNhap.Equals(IdKho) ? 1 : 0) * x.SLNhap -
-                    (IdKho == null || x.IdKhoXuat.Equals(IdKho) ? 1 : 0) * x.SLXuat),
-                    GTXuat = dstk.Where(x => x.Ngay >= TuNgay).Sum(x => (IdKho == null || x.IdKhoNhap.Equals(IdKho) ? 1 : 0) *
-                    x.SLNhap * x.DonGiaVon - (IdKho == null || x.IdKhoXuat.Equals(IdKho) ? 1 : 0) * x.SLXuat * x.DonGiaVon),
-                });
-            });
-
-            return thtk;
-        }
-        public static List<TongHopTonQuy> THTonQuy(DateTime TuNgay, DateTime DenNgay, string LoaiQuy = null)
-        {
-            List<TongHopTonQuy> thtq = new();
-            Parallel.ForEach(DSQuyTT.Where(x => string.IsNullOrEmpty(LoaiQuy) ? true : x.LoaiQuy.Equals(LoaiQuy)), quy =>
-            {
-                var ctno = SoCaiTongHop.Where(x => x.IdNo.Equals(quy.Id) && x.Ngay < DenNgay);
-                var ctco = SoCaiTongHop.Where(x => x.IdCo.Equals(quy.Id) && x.Ngay < DenNgay);
-                lock (thtq)
-                    thtq.Add(new TongHopTonQuy
-                    {
-                        IdQuy = quy.Id,
-                        MaQuy = quy.Ma,
-                        TenQuy = quy.Ten,
-                        TonDauKy = ctno.Where(x => x.Ngay < TuNgay).Sum(x => x.SoTien) - ctco.Where(x => x.Ngay < TuNgay).Sum(x => x.SoTien),
-                        TongThu = ctno.Where(x => x.Ngay >= TuNgay).Sum(x => x.SoTien),
-                        TongChi = ctco.Where(x => x.Ngay >= TuNgay).Sum(x => x.SoTien)
-                    });
-            });
-
-            return thtq;
-        }
-
-
-    }
-
-    public class User
-    {
-        public string Id { get; set; }
         public string UserName { get; set; }
     }
 
-    public class Kho : MiliObject
+    public class Kho : objExtObject
     {
         public string TenKho { get; set; }
         public string DiaChi { get; set; }
@@ -245,7 +35,7 @@ namespace Ban_Hang
 
     }
 
-    public class TheKho
+    public class TheKho : objExtObject
     {
         public string IdCT { get; set; }
         public string SoCT { get; set; }
@@ -278,7 +68,7 @@ namespace Ban_Hang
 
 
     }
-    public class TheKhoCloud : MiliObject
+    public class TheKhoCloud : objExtObject
     {
         public string SoCT { get; set; }
         public string LoaiCT { get; set; }
@@ -318,7 +108,7 @@ namespace Ban_Hang
         public double SLCK => SLDK + SLNhap - SLXuat;
         public double GTCK => GTDK + GTNhap - GTXuat;
     }
-    public class SoCai
+    public class SoCai : objExtObject
     {
         public string SoPhieu { get; set; }
         public string LoaiCT { get; set; }
@@ -361,12 +151,12 @@ namespace Ban_Hang
         public string Id { get; set; } = String.Empty;
         public string Ten { get; set; } = String.Empty;
     }
-    public class NhanVien : MiliObject
+    public class NhanVien : objExtObject
     {
         public string MaNV { get; set; } = string.Empty;
         public string TenNV { get; set; } = string.Empty;
     }
-    public class NhomHang : ObjectExtends
+    public class NhomHang : objExtObject
     {
         public string TenNhom { get; set; } = string.Empty;
 
@@ -386,17 +176,17 @@ namespace Ban_Hang
         public NhomHangCloud ToNhomHangCloud()
         {
             var nh = new NhomHangCloud()
-            {
-                Id = this.Id,
+            {               
                 TenNhom = this.TenNhom,
                 IdNhomCha = this.IdNhomCha
             };
-            nh.CopySource(this);
+            nh.CopyBase(this);
+            nh.CopyExtension(this);
             return nh;
         }
 
     }
-    public class NhomHangCloud : ObjectExtends
+    public class NhomHangCloud : objExtObject
     {
         public string TenNhom { get; set; } = string.Empty;
 
@@ -404,12 +194,12 @@ namespace Ban_Hang
         public NhomHang ToNhomHang()
         {
             var nh = new NhomHang()
-            {
-                Id = this.Id,
+            {               
                 TenNhom = this.TenNhom,
                 IdNhomCha = this.IdNhomCha
             };
-            nh.CopySource(this);
+            nh.CopyBase(this);
+            nh.CopyExtension(this);
             return nh;
         }
 
@@ -450,52 +240,7 @@ namespace Ban_Hang
     }
 
 
-    //public class GiaVon
-    //{
-    //    public string IdHH { get; set; }
-
-    //    public Dictionary<int, double> ListGiaVon = new();
-
-    //    public double GetGiaVon(int thang) => ListGiaVon.ContainsKey(thang) ? ListGiaVon[thang] : 0;
-
-    //    public void SetGiaVon(int thang, double giaVon)
-    //    {
-    //        if (ListGiaVon.ContainsKey(thang)) ListGiaVon[thang] = giaVon;
-    //        else ListGiaVon.Add(thang, giaVon);
-    //    }
-
-    //    public DateTime NgayDauThang(int thang) => new DateTime(DateTime.Now.Year, thang, 1);
-    //    public DateTime NgayCuoiThang(int thang) => new DateTime(DateTime.Now.Year, thang, DateTime.DaysInMonth(DateTime.Now.Year, thang));
-
-    //    public void UpdateGiaVon(int thang)
-    //    {
-    //        var soLuongTonTruoc = DuLieuBan_Hang.SoKhoTongHop.Where(x => x.Ngay < NgayDauThang(thang) && x.IdHH.Equals(IdHH)).Sum(x => x.SLNhap - x.SLXuat) +
-    //            DuLieuBan_Hang.DSHangHoa.FirstOrDefault(x => x.Id.Equals(IdHH))?.SoLuongTonKhoDauNam() ?? 0;
-    //        var giaTriTonTruoc = DuLieuBan_Hang.SoKhoTongHop.Where(x => x.Ngay < NgayDauThang(thang) && x.IdHH.Equals(IdHH)).Sum(x => (x.SLNhap - x.SLXuat) * x.DonGiaVon) +
-    //            DuLieuBan_Hang.DSHangHoa.FirstOrDefault(x => x.Id.Equals(IdHH))?.GiaTriTonKhoDauNam() ?? 0;
-    //        for (int i = thang; i <= 12; i++)
-    //        {
-    //            var listNhap = DuLieuBan_Hang.SoKhoTongHop.Where(x => x.Ngay >= NgayDauThang(thang) && x.Ngay <= NgayCuoiThang(thang) && x.IdHH.Equals(IdHH)).ToList();
-    //            Parallel.ForEach(listNhap, tk => tk.DonGiaVon = tk.DonGia);
-
-    //            var soLuongNhap = listNhap.Sum(x => x.SLNhap);
-    //            var giaTriNhap = listNhap.Sum(x => x.SLNhap * x.DonGia);
-    //            var giaVon = (soLuongTonTruoc + soLuongNhap) == 0 ? 0 : (giaTriTonTruoc + giaTriNhap) / (soLuongTonTruoc + soLuongNhap);
-    //            SetGiaVon(i, giaVon);
-    //            var listXuat = DuLieuBan_Hang.SoKhoTongHop.Where(x => x.Ngay >= NgayDauThang(thang) && x.Ngay <= NgayCuoiThang(thang) && x.IdHH.Equals(IdHH)).ToList();
-
-
-    //            var soLuongXuat = listXuat.Sum(x => x.SLXuat);
-
-    //            soLuongTonTruoc += soLuongNhap - soLuongXuat;
-    //            giaTriTonTruoc += giaTriNhap - soLuongXuat * giaVon;
-
-
-    //            Parallel.ForEach(listXuat, tk => tk.DonGiaVon = giaVon);
-
-    //        }
-    //    }
-    //}
+   
     public class GiaVon
     {
         public string IdHH;
@@ -527,7 +272,7 @@ namespace Ban_Hang
 
         }
     }
-    public class HangHoa : ObjectExtends
+    public class HangHoa : objExtObject
     {
         public string MaHH { get; set; } = String.Empty;
 
@@ -565,26 +310,18 @@ namespace Ban_Hang
         {
             var hh = new HangHoaCloud()
             {
-                Id = this.Id,
                 IdNhom = this.IdNhom,
                 MaHH = this.MaHH,
                 TenHH = this.TenHH,
                 Dvt = this.Dvt,
                 MaLoai = this.MaLoai,
+                GiaBan = this.GiaBan,
                 DVTMoRong = this.DVTMoRong.Select(x => x.MakeCopy()).ToList(),
                 LstDinhMuc = this.LstDinhMuc.Select(x => x.MakeCopy()).ToList(),
                 dn = this.dn.MakeCopy()
             };
-            hh.CopySource(this);
-            return hh;
-        }
-        public HangHoa MakeCopy()
-        {
-            var hh = (HangHoa)this.MemberwiseClone();
-            hh.DVTMoRong = this.DVTMoRong.Select(x => x.MakeCopy()).ToList();
-            hh.LstDinhMuc = this.LstDinhMuc.Select(x => x.MakeCopy()).ToList();
-            hh.dn = this.dn.MakeCopy();
-            hh.CopySource(this);
+            hh.CopyBase(this);
+            hh.CopyExtension(this);
             return hh;
         }
         public double LayGiaVon(string IdHH, DateTime Ngay)
@@ -605,13 +342,14 @@ namespace Ban_Hang
         }
     }
 
-    public class HangHoaCloud : ObjectExtends
+    public class HangHoaCloud : objExtObject
     {
         public string MaHH { get; set; } = String.Empty;
         public string MaLoai { get; set; } = String.Empty;
         public string TenHH { get; set; } = String.Empty;
         public string Dvt { get; set; } = String.Empty;
         public string IdNhom { get; set; } = String.Empty;
+        public double GiaBan { get; set; }
         public List<DVTMoRong> DVTMoRong { get; set; } = new();
         public List<DinhMuc> LstDinhMuc { get; set; } = new();
         public ObjectBeginValue dn { get; set; } = new();
@@ -620,53 +358,29 @@ namespace Ban_Hang
         {
             var hh = new HangHoa()
             {
-                Id = this.Id,
                 IdNhom = this.IdNhom,
                 TenHH = this.TenHH,
                 MaHH = this.MaHH,
                 Dvt = this.Dvt,
                 MaLoai = this.MaLoai,
                 DVTMoRong = this.DVTMoRong.Select(x => x.MakeCopy()).ToList(),
-                LstDinhMuc = this.LstDinhMuc.Select(x => x.MakeCopy()).ToList(),
+                LstDinhMuc = this.LstDinhMuc.Select(x => x.MakeCopy()).ToList(),   
+                GiaBan = this.GiaBan,
                 dn = this.dn.MakeCopy(),
             };
-            hh.CopySource(this);
+            hh.CopyBase(this);
+            hh.CopyExtension(this);
             return hh;
-        }
-        public HangHoaCloud MakeCopy()
-        {
-            var hh = (HangHoaCloud)this.MemberwiseClone();
-            hh.DVTMoRong = this.DVTMoRong.Select(x => x.MakeCopy()).ToList();
-            hh.LstDinhMuc = this.LstDinhMuc.Select(x => x.MakeCopy()).ToList();
-            hh.dn = this.dn.MakeCopy();
-            hh.CopySource(this);
-            return hh;
-        }
-        public bool SaveToLocal()
-        {
-            using (var db = new LiteDatabase(TuDien.LITEDB_LOCAL_PATH))
-            {
-                var coll = db.GetCollection<HangHoaCloud>("HangHoa");
-                return coll.Upsert(this);
-            }
         }
 
     }
 
-    public class BangGiaApDung
+    public class BangGiaApDung : objExtObject
     {
         public bool ApDungToanQuoc { get; set; } = true;
         public List<string> DsRieng { get; set; } = new();
-        public BangGiaApDung MakeCopy()
-        {
-            BangGiaApDung ApDung = (BangGiaApDung)this.MemberwiseClone();
-
-            ApDung.DsRieng = this.DsRieng.ToList();
-
-            return ApDung;
-        }
     }
-    public class BangGia : ObjectExtends
+    public class BangGia : objExtObject
     {
         public string Ten { get; set; } = String.Empty;
         public BangGiaApDung ChiNhanhApDung { get; set; }
@@ -680,19 +394,21 @@ namespace Ban_Hang
         {
             var bg = new BangGiaCloud()
             {
-                Id = this.Id,
+
                 Ten = this.Ten,
                 TuNgay = this.TuNgay,
                 DenNgay = this.DenNgay,
                 ApDung = this.ApDung,
-                ChiNhanhApDung = this.ChiNhanhApDung.MakeCopy(),
-                KHApDung = this.KHApDung.MakeCopy(),
+                ChiNhanhApDung = MiliFirebase.CopyObject<BangGiaApDung>(ChiNhanhApDung),
+                KHApDung = MiliFirebase.CopyObject<BangGiaApDung>(KHApDung),
                 DSHangHoa = this.DSHangHoa.Select(x => x.ToHangHoaCloud()).ToList(),
             };
+            bg.CopyBase(this);
+            bg.CopyExtension(this);
             return bg;
         }
     }
-    public class BangGiaCloud : ObjectExtends
+    public class BangGiaCloud : objExtObject
     {
         public string Ten { get; set; } = String.Empty;
         public BangGiaApDung ChiNhanhApDung { get; set; }
@@ -704,21 +420,22 @@ namespace Ban_Hang
         public BangGia ToBangGia()
         {
             var bg = new BangGia()
-            {
-                Id = this.Id,
+            {                
                 Ten = this.Ten,
                 TuNgay = this.TuNgay,
                 DenNgay = this.DenNgay,
                 ApDung = this.ApDung,
-                ChiNhanhApDung = this.ChiNhanhApDung.MakeCopy(),
-                KHApDung = this.KHApDung.MakeCopy(),
+                ChiNhanhApDung = MiliFirebase.CopyObject<BangGiaApDung>(ChiNhanhApDung),
+                KHApDung = MiliFirebase.CopyObject<BangGiaApDung>(KHApDung),
                 DSHangHoa = this.DSHangHoa.Select(x => x.ToHangHoa()).ToList(),
             };
+            bg.CopyBase(this);
+            bg.CopyExtension(this);
             return bg;
         }
 
     }
-    public class HangHoaKhuyenMai : ObjectExtends
+    public class HangHoaKhuyenMai : objExtObject
     {
         private string _IdHH = String.Empty;
         public string IdHH
@@ -753,7 +470,7 @@ namespace Ban_Hang
         }
 
     }
-    public class HangHoaKhuyenMaiCloud : ObjectExtends
+    public class HangHoaKhuyenMaiCloud : objExtObject
     {
         public string IdHH { get; set; } = String.Empty;
         public float GiaVon { get; set; }
@@ -790,7 +507,7 @@ namespace Ban_Hang
         public string ToanTu { get; set; } = String.Empty;
         public float GiaTri { get; set; }
     }
-    public class NhomKhach : ObjectExtends
+    public class NhomKhach : objExtObject
     {
         public string TenNhom { get; set; } = String.Empty;
         public float GiamGia { get; set; }
@@ -798,7 +515,7 @@ namespace Ban_Hang
         public List<DieuKienKH> DSDieuKien { get; set; } = new();
         public string GhiChu { get; set; } = String.Empty;
     }
-    public class KhachHang : ObjectExtends
+    public class KhachHang : objExtObject
     {
         public string MaKH { get; set; } = String.Empty;
         public string TenKhach { get; set; } = String.Empty;
@@ -814,12 +531,12 @@ namespace Ban_Hang
                 TenNhomKhach = nk == null ? string.Empty : nk.TenNhom;
             }
         }
-        public string TenNhomKhach { get; set; } = String.Empty;
-        public bool LaCaNhan { get => GetLogicField(TuDien.KhachHang.LaCaNhan); set => SetLogicField(TuDien.KhachHang.LaCaNhan, value); }
+        public string TenNhomKhach { get; set; } = String.Empty;        
         /// <summary>
         /// 0: Ngưới mua 1: Người bán 2: Mua và bán
         /// </summary>
         public int LoaiKhach { get; set; }
+        public bool LaCaNhan { get => GetLogicField(TuDien.KhachHang.LaCaNhan); set => SetLogicField(TuDien.KhachHang.LaCaNhan, value); }
         public DateTime NgaySinh { get => GetDateField(TuDien.KhachHang.NgaySinh); set => SetDateField(TuDien.KhachHang.NgaySinh, value); }
         public string EMail { get => GetTextField(TuDien.KhachHang.EMail); set => SetTextField(TuDien.KhachHang.EMail, value); }
         public string DiaChi { get => GetTextField(TuDien.KhachHang.DiaChi); set => SetTextField(TuDien.KhachHang.DiaChi, value); }
@@ -830,13 +547,15 @@ namespace Ban_Hang
         {
             var kh = new KhachHangCloud()
             {
-                Id = this.Id,
+                
                 MaKH = this.MaKH,
                 TenKhach = this.TenKhach,
                 IdNhomKhach = this.IdNhomKhach,
+                LoaiKhach = this.LoaiKhach,
                 dn = this.dn.MakeCopy()
             };
-            kh.CopySource(this);
+            kh.CopyBase(this);
+            kh.CopyExtension(this);
             return kh;
         }
 
@@ -855,22 +574,28 @@ namespace Ban_Hang
 
     }
 
-    public class KhachHangCloud : ObjectExtends
+    public class KhachHangCloud : objExtObject
     {
         public string MaKH { get; set; } = String.Empty;
         public string TenKhach { get; set; } = String.Empty;
         public string IdNhomKhach { get; set; } = String.Empty;
+        /// <summary>
+        /// 0: Ngưới mua 1: Người bán 2: Mua và bán
+        /// </summary>
+        public int LoaiKhach { get; set; }
         public ObjectBeginValue dn { get; set; } = new();
         public KhachHang ToKhachHang()
         {
             var kh = new KhachHang()
             {
-                Id = this.Id,
+                
                 MaKH = this.MaKH,
                 TenKhach = this.TenKhach,
                 IdNhomKhach = this.IdNhomKhach,
+                LoaiKhach = this.LoaiKhach
             };
-            kh.CopySource(this);
+            kh.CopyBase(this);
+            kh.CopyExtension(this);
             return kh;
         }
     }
@@ -953,7 +678,7 @@ namespace Ban_Hang
         }
     }
 
-    public class DonHangBan : ObjectExtends
+    public class DonHangBan : objExtObject
     {
         /// <summary>
         /// 0: Đang soạn thảo
@@ -971,7 +696,7 @@ namespace Ban_Hang
             set
             {
                 _IdKhach = value;
-                var kh = DuLieuBanHang.DSKhachHang.FirstOrDefault(x => x.Id.Equals(_IdKhach));
+                var kh = DuLieuBanHang.DSKhachHang.FirstOrDefault(x => x.Id.Equals(_IdKhach)).ToKhachHang();
                 TenKhach = kh == null ? string.Empty : kh.TenKhach;
                 MaKhach = kh == null ? string.Empty : kh.MaKH;
                 SDT = kh == null ? string.Empty : kh.DienThoai;
@@ -1035,7 +760,7 @@ namespace Ban_Hang
         {
             var dh = new DonHangCloud()
             {
-                Id = this.Id,
+                
                 LoaiCT = LoaiCT,
                 IdKhach = this.IdKhach,
                 IdBangGia = this.IdBangGia,
@@ -1051,16 +776,11 @@ namespace Ban_Hang
                 DsTienTrinh = this.DsTienTrinh.Select(x => x.MakeCopy()).ToList(),
                 GhiChu = this.GhiChu,
             };
-            dh.CopySource(this);
+            dh.CopyBase(this);
+            dh.CopyExtension(this);
             return dh;
         }
-        public DonHangBan MakeCopy()
-        {
-            var dh = (DonHangBan)this.MemberwiseClone();
-            dh.CTDonHang = this.CTDonHang.Select(x => x.MakeCopy()).ToList();
-            dh.CopySource(this);
-            return dh;
-        }
+
         public List<TheKho> ToTheKho()
         {
             List<TheKho> ds = new();
@@ -1093,7 +813,7 @@ namespace Ban_Hang
 
 
     }
-    public class DonHangMua : ObjectExtends
+    public class DonHangMua : objExtObject
     {
         /// <summary>
         /// 0: Đang soạn thảo
@@ -1111,7 +831,7 @@ namespace Ban_Hang
             set
             {
                 _IdKhach = value;
-                var kh = DuLieuBanHang.DSKhachHang.FirstOrDefault(x => x.Id.Equals(_IdKhach));
+                var kh = DuLieuBanHang.DSKhachHang.FirstOrDefault(x => x.Id.Equals(_IdKhach)).ToKhachHang();
                 TenKhach = kh == null ? string.Empty : kh.TenKhach;
                 MaKhach = kh == null ? string.Empty : kh.MaKH;
                 SDT = kh == null ? string.Empty : kh.DienThoai;
@@ -1173,7 +893,7 @@ namespace Ban_Hang
         {
             var dh = new DonHangCloud()
             {
-                Id = this.Id,
+                
                 LoaiCT = LoaiCT,
                 IdKhach = this.IdKhach,
                 IdBangGia = this.IdBangGia,
@@ -1189,14 +909,8 @@ namespace Ban_Hang
                 DsTienTrinh = this.DsTienTrinh.Select(x => x.MakeCopy()).ToList(),
                 GhiChu = this.GhiChu,
             };
-            dh.CopySource(this);
-            return dh;
-        }
-        public DonHangMua MakeCopy()
-        {
-            var dh = (DonHangMua)this.MemberwiseClone();
-            dh.CTDonHang = this.CTDonHang.Select(x => x.MakeCopy()).ToList();
-            dh.CopySource(this);
+            dh.CopyBase(this);
+            dh.CopyExtension(this);
             return dh;
         }
         public List<TheKho> ToTheKho()
@@ -1230,7 +944,7 @@ namespace Ban_Hang
         }
     }
 
-    public class DonHangCloud : ObjectExtends
+    public class DonHangCloud : objExtObject
     {
         /// <summary>
         /// 0: Đang soạn thảo
@@ -1256,7 +970,7 @@ namespace Ban_Hang
         {
             var dh = new DonHangMua()
             {
-                Id = this.Id,
+                
                 LoaiCT = this.LoaiCT,
                 IdKhach = this.IdKhach,
                 IdBangGia = this.IdBangGia,
@@ -1273,14 +987,15 @@ namespace Ban_Hang
                 DsTienTrinh = this.DsTienTrinh.Select(x => x.MakeCopy()).ToList(),
                 GhiChu = this.GhiChu,
             };
-            dh.CopySource(this);
+            dh.CopyBase(this);
+            dh.CopyExtension(this);
             return dh;
         }
         public DonHangBan ToDonHangBan()
         {
             var dh = new DonHangBan()
             {
-                Id = this.Id,
+                
                 LoaiCT = this.LoaiCT,
                 IdKhach = this.IdKhach,
                 IdBangGia = this.IdBangGia,
@@ -1297,14 +1012,8 @@ namespace Ban_Hang
                 DsTienTrinh = this.DsTienTrinh.Select(x => x.MakeCopy()).ToList(),
                 GhiChu = this.GhiChu,
             };
-            dh.CopySource(this);
-            return dh;
-        }
-        public DonHangCloud MakeCopy()
-        {
-            var dh = (DonHangCloud)this.MemberwiseClone();
-            dh.CTDonHang = this.CTDonHang.Select(x => x.MakeCopy()).ToList();
-            dh.CopySource(this);
+            dh.CopyBase(this);
+            dh.CopyExtension(this);
             return dh;
         }
         public void CapNhatGiaVon()
@@ -1540,7 +1249,7 @@ namespace Ban_Hang
         }
     }
 
-    public class QuyTienTe : MiliObject
+    public class QuyTienTe : MiliFirebase
     {
         public string Ma { get; set; }
         public string Ten { get; set; }
@@ -1563,9 +1272,8 @@ namespace Ban_Hang
             return (CTThuChi)this.MemberwiseClone();
         }
     }
-    public class CTTienTe
+    public class CTTienTe : objExtObject
     {
-        public string Id { get; set; }
         public string SoPhieu { get; set; }
         public string LoaiCT { get; set; }
         public string IdCT { get; set; }
@@ -1577,7 +1285,7 @@ namespace Ban_Hang
             set
             {
                 _IdKhach = value;
-                var kh = DuLieuBanHang.DSKhachHang.FirstOrDefault(x => x.Id.Equals(_IdKhach));
+                var kh = DuLieuBanHang.DSKhachHang.FirstOrDefault(x => x.Id.Equals(_IdKhach)).ToKhachHang();
                 TenKhach = kh == null ? string.Empty : kh.TenKhach;
                 DiaChi = kh == null ? string.Empty : kh.DiaChi;
             }
@@ -1590,7 +1298,6 @@ namespace Ban_Hang
         {
             CTTienTeCloud p = new CTTienTeCloud
             {
-                Id = this.Id,
                 IdKhach = this.IdKhach,
                 SoPhieu = this.SoPhieu,
                 LoaiCT = this.LoaiCT,
@@ -1599,16 +1306,13 @@ namespace Ban_Hang
                 ChiTiet = this.ChiTiet.Select(x => x.MakeCopy()).ToList(),
                 IdUser = this.IdUser
             };
+            p.CopyBase(this);
+            p.CopyExtension(this);
             return p;
         }
-        public CTTienTe MakeCopy()
-        {
-            return (CTTienTe)this.MemberwiseClone();
-        }
-
 
     }
-    public class CTTienTeCloud : MiliObject
+    public class CTTienTeCloud : objExtObject
     {
         public string SoPhieu { get; set; }
         public string LoaiCT { get; set; }
@@ -1642,7 +1346,6 @@ namespace Ban_Hang
         {
             CTTienTe p = new CTTienTe
             {
-                Id = this.Id,
                 IdKhach = this.IdKhach,
                 SoPhieu = this.SoPhieu,
                 LoaiCT = this.LoaiCT,
@@ -1651,23 +1354,10 @@ namespace Ban_Hang
                 ChiTiet = this.ChiTiet.Select(x => x.MakeCopy()).ToList(),
                 IdUser = this.IdUser
             };
+            p.CopyBase(this);
+            p.CopyExtension(this);
             return p;
         }
-        public CTTienTeCloud MakeCopy()
-        {
-            CTTienTeCloud tc = (CTTienTeCloud)this.MemberwiseClone();
-            tc.ChiTiet = this.ChiTiet.Select(x => x.MakeCopy()).ToList();
-            return tc;
-        }
-        //public async Task UpdateToCloud()
-        //{
-
-        //}
-        //public Task DeleteFromCloud()
-        //{
-        //    HuyBoCongNo();
-        //    return Task.CompletedTask;
-        //}
 
         private void HuyBoCongNo()
         {

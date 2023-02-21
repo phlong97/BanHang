@@ -18,21 +18,21 @@ namespace Ban_Hang
                   AuthTokenAsyncFactory = () => Task.FromResult(Secret)
               });
         }
-        public async Task UpdateToFirebase<T>(string child, T data) where T : MiliObject
+        public async Task UpdateToFirebase<T>(string child, T data) where T : MiliFirebase
         {
             if (!string.IsNullOrEmpty(data.Id))
             {
                 await Client.Child(child).Child(data.Id).DeleteAsync();
             }
             data.Id = MiliHelper.CreateKey();
-            data.Sync = true;
+            data.snc = true;
             await Client.Child(child).Child(data.Id).PutAsync(data);
             //Luu key vao lang nghe
             //SaveToObserv(data.Key);
         }
 
 
-        public async Task<List<T>> GetDataFromFireBase<T>(string child) where T : MiliObject
+        public async Task<List<T>> GetDataFromFireBase<T>(string child) where T : MiliFirebase
         {
             var data = await
                  Client.Child(child).OnceAsync<T>();

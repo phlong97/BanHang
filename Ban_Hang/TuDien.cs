@@ -8,8 +8,8 @@ namespace Ban_Hang
         public const string FIREBASE_URL = "", FIREBASE_SECRET = "";
         public static string LITEDB_LOCAL_PATH = Path.Combine(Environment.CurrentDirectory, "Ban_Hang.db");
 
-        public static string[] dsCollection = { "KhachHang", "DonHangCloud","TheKhoCloud","NhanVien","CTTienTeCloud",
-            "QuyTienTe","HangHoaCloud","BangGiaCloud","NhomHang","NhomKhach", "Kho" , "NhanVien"};
+        public static string[] dsCollection = { "KhachHangCloud", "DonHangCloud","TheKhoCloud","NhanVien","CTTienTeCloud",
+            "QuyTienTe","HangHoaCloud","BangGiaCloud","NhomHang","NhomKhach", "Kho"};
         public static class ColName
         {
             public const string HangHoa = "HangHoaCloud", NhanVien = "NhanVien", KhachHang = "KhachHang",
