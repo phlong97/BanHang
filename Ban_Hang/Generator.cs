@@ -33,101 +33,98 @@ namespace Ban_Hang
 
         public static void TaoDanhMucLiteDb()
         {
-            using (var db = new LiteDatabase(TuDien.LITEDB_LOCAL_PATH))
+            //Tạo danh mục nhóm khách hàng
+            List<NhomKhach> DsNhomKhach = new();
+            for (int i = 1; i <= 5; i++)
             {
-                //Tạo danh mục nhóm khách hàng
-                List<NhomKhach> DsNhomKhach = new();
-                for (int i = 1; i <= 5; i++)
+                DsNhomKhach.Add(new NhomKhach
                 {
-                    DsNhomKhach.Add(new NhomKhach
-                    {
-                        Id = $"ID_NK{i.ToString("D1")}",
-                        TenNhom = $"Nhóm khách {i}",
-                    });
-                }
-                var collectionNk = db.GetCollection<NhomKhach>(TuDien.ColName.NhomKhach);
-                if (collectionNk.Count() > 0) collectionNk.DeleteAll();
-                collectionNk.InsertBulk(DsNhomKhach);
-
-                List<NhanVien> DsNhanVien = new();
-                for (int i = 1; i <= 10; i++)
-                {
-                    DsNhanVien.Add(new NhanVien
-                    {
-                        Id = $"ID_NV{i.ToString("D4")}",
-                        MaNV = $"MA_NV{i.ToString("D4")}",
-                        TenNV = $"Nhân viên {i}"
-                    });
-                }
-                var collectionNv = db.GetCollection<NhanVien>(TuDien.ColName.NhanVien);
-                if(collectionNv.Count() > 0) collectionNv.DeleteAll();
-                collectionNv.InsertBulk(DsNhanVien);
-
-                //Tạo danh mục nhóm hàng
-                List<NhomHang> DsNhomHang = new();
-                for (int i = 1; i <= 50; i++)
-                {
-                    DsNhomHang.Add(new NhomHang
-                    {
-                        Id = $"ID_NH{i.ToString("D4")}",
-                        TenNhom = $"Nhóm hàng {i}",
-                    });
-                }
-                var collectionNh = db.GetCollection<NhomHang>(TuDien.ColName.NhomHang);
-                if (collectionNh.Count() > 0) collectionNh.DeleteAll();
-                collectionNh.InsertBulk(DsNhomHang);
-
-                //Tạo danh mục khách hàng
-                string[] DsHo = "Nguyễn,Trần,Lê,Phan,Phạm".Split(',');
-                string[] DsTen = ("Tiểu Bảo,Hữu Cảnh,Trọng Chính,Bá Cường,Hưng Ðạo,Ðắc Di,Tiến Ðức,Nghĩa Dũng,Trọng Dũng,Anh Khoa," +
-                    "Anh Khôi,Trung Kiên,Ðức Hải,Công Hiếu,Nhật Hùng,Tuấn Hùng,Minh Huy,Xuân Lộc,Trí Minh,Xuân Nam,Hữu Nghĩa,Bình " +
-                    "Nguyên,Hoài Phong,Ngọc Quang,Cao Tiến,Minh Toàn,Hữu Trác,Hữu Trí,Ðức Tuấn,Công Thành,Duy Thành,Gia Vinh,").Split(','); ;
-                List<KhachHangCloud> DsKH = new();
-                for (int i = 1; i <= 100; i++)
-                {
-                    DsKH.Add(new KhachHang
-                    {
-                        Id = $"ID_KH{i.ToString("D5")}",
-                        MaKH = $"MA_KH{i.ToString("D5")}",
-                        TenKhach = DsHo[random.Next(DsHo.Count())] + " " + DsTen[random.Next(DsTen.Count())],
-                        DiaChi = RandomString(15),
-                        DienThoai = RandomNumberString(10),
-                        EMail = $"{RandomString(10)}@gmail.com",
-                        NgaySinh = RandomDay(1945),
-                        LaCaNhan = true,
-                        IdNhomKhach = $"ID_NK{random.Next(1, 6).ToString("D1")}",
-                    }.ToKhachHangCloud());
-                }
-                var collectionKH = db.GetCollection<KhachHangCloud>(TuDien.ColName.KhachHang);
-                if (collectionKH.Count() > 0) collectionKH.DeleteAll();
-                collectionKH.InsertBulk(DsKH);
-                //Tạo danh mục hàng hóa
-                string Dvt = "Kg,g,m,cm,tạ,tấn,l,ml,thùng,cái";
-                List<HangHoaCloud> DsHangHoa = new();
-                for (int i = 0; i < 500; i++)
-                {
-                    var hh = new HangHoa
-                    {
-                        Id = $"ID_HH{(i + 1).ToString("D5")}",
-                        MaHH = $"MaHH_HH{(i + 1).ToString("D5")}",
-                        TenHH = $"Hàng hóa {i + 1}",
-                        MaLoai = $"MA_LOAI{i.ToString("D5")}",
-                        IdNhom = $"ID_NH{random.Next(0, 50).ToString("D4")}",
-                        Dvt = Dvt.Split(',')[random.Next(0, 10)],
-                        LaHangBan = random.NextDouble() > 0.5,
-                        NgungKinhDoanh = false,
-                        TonMin = 1,
-                        TonMax = 100,
-                        GiaBan = random.Next(5000, 50000)
-                    };
-                    hh.TonKho = hh.TonMax - 1;
-                    DsHangHoa.Add(hh.ToHangHoaCloud());
-
-                }
-                var collectionHH = db.GetCollection<HangHoaCloud>(TuDien.ColName.HangHoa);
-                if (collectionHH.Count() > 0) collectionHH.DeleteAll();
-                collectionHH.InsertBulk(DsHangHoa);
+                    Id = $"ID_NK{i.ToString("D1")}",
+                    TenNhom = $"Nhóm khách {i}",
+                });
             }
+            var collectionNk = _LiteDb.GetDb().GetCollection<NhomKhach>(TuDien.ColName.NhomKhach);
+            if (collectionNk.Count() > 0) collectionNk.DeleteAll();
+            collectionNk.InsertBulk(DsNhomKhach);
+
+            List<NhanVien> DsNhanVien = new();
+            for (int i = 1; i <= 10; i++)
+            {
+                DsNhanVien.Add(new NhanVien
+                {
+                    Id = $"ID_NV{i.ToString("D4")}",
+                    MaNV = $"MA_NV{i.ToString("D4")}",
+                    TenNV = $"Nhân viên {i}"
+                });
+            }
+            var collectionNv = _LiteDb.GetDb().GetCollection<NhanVien>(TuDien.ColName.NhanVien);
+            if (collectionNv.Count() > 0) collectionNv.DeleteAll();
+            collectionNv.InsertBulk(DsNhanVien);
+
+            //Tạo danh mục nhóm hàng
+            List<NhomHang> DsNhomHang = new();
+            for (int i = 1; i <= 50; i++)
+            {
+                DsNhomHang.Add(new NhomHang
+                {
+                    Id = $"ID_NH{i.ToString("D4")}",
+                    TenNhom = $"Nhóm hàng {i}",
+                });
+            }
+            var collectionNh = _LiteDb.GetDb().GetCollection<NhomHang>(TuDien.ColName.NhomHang);
+            if (collectionNh.Count() > 0) collectionNh.DeleteAll();
+            collectionNh.InsertBulk(DsNhomHang);
+
+            //Tạo danh mục khách hàng
+            string[] DsHo = "Nguyễn,Trần,Lê,Phan,Phạm".Split(',');
+            string[] DsTen = ("Tiểu Bảo,Hữu Cảnh,Trọng Chính,Bá Cường,Hưng Ðạo,Ðắc Di,Tiến Ðức,Nghĩa Dũng,Trọng Dũng,Anh Khoa," +
+                "Anh Khôi,Trung Kiên,Ðức Hải,Công Hiếu,Nhật Hùng,Tuấn Hùng,Minh Huy,Xuân Lộc,Trí Minh,Xuân Nam,Hữu Nghĩa,Bình " +
+                "Nguyên,Hoài Phong,Ngọc Quang,Cao Tiến,Minh Toàn,Hữu Trác,Hữu Trí,Ðức Tuấn,Công Thành,Duy Thành,Gia Vinh,").Split(','); ;
+            List<KhachHangCloud> DsKH = new();
+            for (int i = 1; i <= 100; i++)
+            {
+                DsKH.Add(new KhachHang
+                {
+                    Id = $"ID_KH{i.ToString("D5")}",
+                    MaKH = $"MA_KH{i.ToString("D5")}",
+                    TenKhach = DsHo[random.Next(DsHo.Count())] + " " + DsTen[random.Next(DsTen.Count())],
+                    DiaChi = RandomString(15),
+                    DienThoai = RandomNumberString(10),
+                    EMail = $"{RandomString(10)}@gmail.com",
+                    NgaySinh = RandomDay(1945),
+                    LaCaNhan = true,
+                    IdNhomKhach = $"ID_NK{random.Next(1, 6).ToString("D1")}",
+                }.ToKhachHangCloud());
+            }
+            var collectionKH = _LiteDb.GetDb().GetCollection<KhachHangCloud>(TuDien.ColName.KhachHang);
+            if (collectionKH.Count() > 0) collectionKH.DeleteAll();
+            collectionKH.InsertBulk(DsKH);
+            //Tạo danh mục hàng hóa
+            string Dvt = "Kg,g,m,cm,tạ,tấn,l,ml,thùng,cái";
+            List<HangHoaCloud> DsHangHoa = new();
+            for (int i = 0; i < 500; i++)
+            {
+                var hh = new HangHoa
+                {
+                    Id = $"ID_HH{(i + 1).ToString("D5")}",
+                    MaHH = $"MaHH_HH{(i + 1).ToString("D5")}",
+                    TenHH = $"Hàng hóa {i + 1}",
+                    MaLoai = $"MA_LOAI{i.ToString("D5")}",
+                    IdNhom = $"ID_NH{random.Next(0, 50).ToString("D4")}",
+                    Dvt = Dvt.Split(',')[random.Next(0, 10)],
+                    LaHangBan = random.NextDouble() > 0.5,
+                    NgungKinhDoanh = false,
+                    TonMin = 1,
+                    TonMax = 100,
+                    GiaBan = random.Next(5000, 50000)
+                };
+                hh.TonKho = hh.TonMax - 1;
+                DsHangHoa.Add(hh.ToHangHoaCloud());
+
+            }
+            var collectionHH = _LiteDb.GetDb().GetCollection<HangHoaCloud>(TuDien.ColName.HangHoa);
+            if (collectionHH.Count() > 0) collectionHH.DeleteAll();
+            collectionHH.InsertBulk(DsHangHoa);
 
         }
         static public void TaoDanhMucXML()

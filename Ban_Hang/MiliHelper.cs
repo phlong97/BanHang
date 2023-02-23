@@ -1,6 +1,5 @@
-﻿using DevExpress.Data;
+﻿using DevExpress.XtraEditors.Repository;
 using DevExpress.XtraGrid.Columns;
-using DevExpress.XtraRichEdit.Fields;
 using LiteDB;
 using System;
 using System.Collections.Generic;
@@ -20,11 +19,12 @@ namespace Ban_Hang
         }
         public static GridColumn NewGridCloumn(string _caption, string _fieldName, int _width = 0, string _colType = "T", string _formatString = "N0",bool _allowEdit = false, bool _visible = true)
         {
-            GridColumn col = new GridColumn()
+            GridColumn col = new()
             {
-                Caption = _caption,                
+                Caption = _caption,
+                Name = _fieldName,
                 FieldName = _fieldName,
-                Visible = _visible,
+                Visible = _visible,                
             };
             col.OptionsColumn.AllowEdit = _allowEdit;
             if (_width != 0) col.Width = _width;
@@ -46,9 +46,14 @@ namespace Ban_Hang
                 col.DisplayFormat.FormatString = _formatString;
             }
             else if (_colType.Equals("I"))
-            {
-                col.UnboundDataType = typeof(object);
-            }
+            {               
+                col.UnboundType = DevExpress.Data.UnboundColumnType.Object;
+                RepositoryItemPictureEdit ri = new RepositoryItemPictureEdit();
+                ri.SizeMode = DevExpress.XtraEditors.Controls.PictureSizeMode.Zoom;
+                ri.CustomHeight = 0;
+                col.ColumnEdit = ri;                
+            }            
+            col.Tag = _colType;
             return col;
         }
     }

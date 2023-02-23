@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Common.CommandTrees;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using DevExpress.XtraRichEdit.Commands;
 using LiteDB;
 
 namespace Ban_Hang
